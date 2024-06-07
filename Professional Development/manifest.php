@@ -20,18 +20,17 @@ along with this program.  If not, see <http:// www.gnu.org/licenses/>.
 // This file describes the module, including database tables
 
 // Basic variables
-$name        = 'Professional Development';            // The name of the module as it appears to users. Needs to be unique to installation. Also the name of the folder that holds the unit.
-$description = 'A professional development module for Gibbon to record Staff professional development';            // Short text description
+$name        = 'Professional Development';
+$description = 'A professional development module for Gibbon to record Staff professional development';
 $entryURL    = "";   // The landing page for the unit, used in the main menu
-$type        = "Additional";  // Do not change.
-$category    = 'Other';            // The main menu area to place the module in
-$version     = '0.0.01';            // Version number
-$author      = 'Ali';            // Your name
-$url         = 'https://github.com/ali-ichk/module-professionalDevelopment';            // Your URL
+$type        = "Additional";
+$category    = 'Other';
+$version     = '0.0.01';
+$author      = 'Ali';
+$url         = 'https://github.com/ali-ichk/module-professionalDevelopment';
 
 // Module tables & gibbonSettings entries
-$tables = 0;
-$moduleTables[$tables++] = "CREATE TABLE `professionalDevelopmentRequest` (
+$moduleTables[] = "CREATE TABLE `professionalDevelopmentRequest` (
     `professionalDevelopmentRequestID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `gibbonSchoolYearID` int(3) unsigned zerofill NOT NULL,
     `gibbonPersonIDCreated` int(10) unsigned zerofill NOT NULL,
@@ -39,29 +38,68 @@ $moduleTables[$tables++] = "CREATE TABLE `professionalDevelopmentRequest` (
     `gibbonPersonIDModified` int(10) unsigned zerofill NOT NULL,
     `timestampModified` NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `status` ENUM('Requested','Approved','Rejected','Cancelled','Awaiting Final Approval','Draft') DEFAULT 'Requested' NOT NULL,
-    `eventType` enum(‘Internal’,’External’) NOT NULL,
+    `eventType` ENUM('Internal', 'External') NOT NULL,
     `eventFocus` varchar(60) NOT NULL,
     `attendeeRole` varchar(60),
     `attendeeCount` int(10) NOT NULL,
     `eventTitle` varchar(60) NOT NULL,
-    `eventLocation` text NOT NULL,
-    `coverRequired` enum(‘Y’, ’N’),
-    `coverAmount` varchar(60),
     `eventDescription` text NOT NULL,
+    `eventLocation` text NOT NULL,
     `personalRational` text,
     `departmentImpact` text,
     `schoolSharing` text,
     `supportingEvidence` varchar(255) DEFAULT NULL,
     `notes` text,
+    `coverRequired` ENUM('Y', 'N'),
+    `coverAmount` varchar(60),    
     PRIMARY KEY (`professionalDevelopmentRequestID`)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-$moduleTables[] = ''; // Also can be used to put data into gibbonSettings. Other sql can be run, but resulting data will not be cleaned up on uninstall.
+
+$moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestPerson` (
+  `professionalDevelopmentRequestPersonID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+  `professionalDevelopmentRequestID` int(10) unsigned zerofill NOT NULL,
+  `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+  `registrationCost` decimal(12,2) NOT NULL,
+  `miscellaneousCost` decimal(12,2),
+  `costNotes` decimal varchar(60),
+  PRIMARY KEY (`professionalDevelopmentRequestPersonID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+$moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestDays` (
+  `professionalDevelopmentRequestDaysID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+  `professionalDevelopmentRequestID` int(10) unsigned zerofill NOT NULL,
+  `eventStartDate` date NOT NULL,
+  `eventEndDate` date NOT NULL,
+  `eventAllDay` tinyint(1) NOT NULL,
+  `eventStartTime` time NOT NULL DEFAULT '00:00:00',
+  `eventEndTime` time NOT NULL DEFAULT '00:00:00',
+  PRIMARY KEY (`professionalDevelopmentRequestDaysID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+$moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestLog` (
+  `professionalDevelopmentRequestLogID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+  `professionalDevelopmentRequestID` int(10) unsigned zerofill NOT NULL,
+  `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+  `requestStatus` enum('Request','Cancellation','Approval - Partial','Approval - Final','Rejection','Comment','Edit') NOT NULL,
+  `comment` text,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`professionalDevelopmentRequestLogID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+$moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestApprovers` (
+  `professionalDevelopmentRequestApproversID` int(4) unsigned zerofill NOT NULL AUTO_INCREMENT,
+  `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+  `sequenceNumber` int(4) DEFAULT NULL,
+  `finalApprover` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`professionalDevelopmentRequestApproversID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 // Add gibbonSettings entries
 $gibbonSetting[] = "";
 
 // Action rows 
 // One array per action
+
 $actionRows[] = [
     'name'                      => '', // The name of the action (appears to user in the right hand side module menu)
     'precedence'                => '0',// If it is a grouped action, the precedence controls which is highest action in group
