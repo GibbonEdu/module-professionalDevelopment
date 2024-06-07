@@ -20,17 +20,41 @@ along with this program.  If not, see <http:// www.gnu.org/licenses/>.
 // This file describes the module, including database tables
 
 // Basic variables
-$name        = '';            // The name of the module as it appears to users. Needs to be unique to installation. Also the name of the folder that holds the unit.
-$description = '';            // Short text description
-$entryURL    = "index.php";   // The landing page for the unit, used in the main menu
+$name        = 'Professional Development';            // The name of the module as it appears to users. Needs to be unique to installation. Also the name of the folder that holds the unit.
+$description = 'A professional development module for Gibbon to record Staff professional development';            // Short text description
+$entryURL    = "";   // The landing page for the unit, used in the main menu
 $type        = "Additional";  // Do not change.
-$category    = '';            // The main menu area to place the module in
-$version     = '';            // Version number
-$author      = '';            // Your name
-$url         = '';            // Your URL
+$category    = 'Other';            // The main menu area to place the module in
+$version     = '0.0.01';            // Version number
+$author      = 'Ali';            // Your name
+$url         = 'https://github.com/ali-ichk/module-professionalDevelopment';            // Your URL
 
 // Module tables & gibbonSettings entries
-$moduleTables[] = ''; // One array entry for every database table you need to create. Might be nice to preface the table name with the module name, to keep the db neat. 
+$tables = 0;
+$moduleTables[$tables++] = "CREATE TABLE `professionalDevelopmentRequest` (
+    `professionalDevelopmentRequestID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+    `gibbonSchoolYearID` int(3) unsigned zerofill NOT NULL,
+    `gibbonPersonIDCreated` int(10) unsigned zerofill NOT NULL,
+    `timestampCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `gibbonPersonIDModified` int(10) unsigned zerofill NOT NULL,
+    `timestampModified` NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `status` ENUM('Requested','Approved','Rejected','Cancelled','Awaiting Final Approval','Draft') DEFAULT 'Requested' NOT NULL,
+    `eventType` enum(‘Internal’,’External’) NOT NULL,
+    `eventFocus` varchar(60) NOT NULL,
+    `attendeeRole` varchar(60),
+    `attendeeCount` int(10) NOT NULL,
+    `eventTitle` varchar(60) NOT NULL,
+    `eventLocation` text NOT NULL,
+    `coverRequired` enum(‘Y’, ’N’),
+    `coverAmount` varchar(60),
+    `eventDescription` text NOT NULL,
+    `personalRational` text,
+    `departmentImpact` text,
+    `schoolSharing` text,
+    `supportingEvidence` varchar(255) DEFAULT NULL,
+    `notes` text,
+    PRIMARY KEY (`professionalDevelopmentRequestID`)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 $moduleTables[] = ''; // Also can be used to put data into gibbonSettings. Other sql can be run, but resulting data will not be cleaned up on uninstall.
 
 // Add gibbonSettings entries
