@@ -21,8 +21,8 @@ along with this program.  If not, see <http:// www.gnu.org/licenses/>.
 
 // Basic variables
 $name        = 'Professional Development';
-$description = 'A professional development module for Gibbon to record Staff professional development';
-$entryURL    = "";   // The landing page for the unit, used in the main menu
+$description = 'A Professional Development (PD) module for Gibbon to record Staff PD';
+$entryURL    = "requests_manage.php";   // The landing page for the unit, used in the main menu
 $type        = "Additional";
 $category    = 'Other';
 $version     = '0.0.01';
@@ -36,7 +36,7 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequest` (
     `gibbonPersonIDCreated` int(10) unsigned zerofill NOT NULL,
     `timestampCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `gibbonPersonIDModified` int(10) unsigned zerofill NOT NULL,
-    `timestampModified` NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `timestampModified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `status` ENUM('Requested','Approved','Rejected','Cancelled','Awaiting Final Approval','Draft') DEFAULT 'Requested' NOT NULL,
     `eventType` ENUM('Internal', 'External') NOT NULL,
     `eventFocus` varchar(60) NOT NULL,
@@ -61,7 +61,7 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestPerson` (
   `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
   `registrationCost` decimal(12,2) NOT NULL,
   `miscellaneousCost` decimal(12,2),
-  `costNotes` decimal varchar(60),
+  `costNotes` varchar(60),
   PRIMARY KEY (`professionalDevelopmentRequestPersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
@@ -95,18 +95,19 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestApprovers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 // Add gibbonSettings entries
-$gibbonSetting[] = "";
+$gibbonSetting[] = "INSERT INTO `gibbonSetting` (`scope` ,`name` ,`nameDisplay` ,`description` ,`value`) VALUES ('Professional Development', 'welcomeText', 'Welcome Text', 'A short message displayed on the landing page for Professional Development', '')";
+
 
 // Action rows 
 // One array per action
 
 $actionRows[] = [
-    'name'                      => '', // The name of the action (appears to user in the right hand side module menu)
+    'name'                      => 'Manage Requests', // The name of the action (appears to user in the right hand side module menu)
     'precedence'                => '0',// If it is a grouped action, the precedence controls which is highest action in group
-    'category'                  => '', // Optional: subgroups for the right hand side module menu
-    'description'               => '', // Text description
-    'URLList'                   => '', // List of pages included in this action
-    'entryURL'                  => '', // The landing action for the page.
+    'category'                  => 'Administration', // Optional: subgroups for the right hand side module menu
+    'description'               => 'Allows the user to manage Professional Development requests.', // Text description
+    'URLList'                   => 'requests_manage.php,requests_manage_add.php', // List of pages included in this action
+    'entryURL'                  => 'requests_manage.php', // The landing action for the page.
     'entrySidebar'              => 'Y', // Whether or not there's a sidebar on entry to the action
     'menuShow'                  => 'Y', // Whether or not this action shows up in menus or if it's hidden
     'defaultPermissionAdmin'    => 'Y', // Default permission for built in role Admin
@@ -115,10 +116,12 @@ $actionRows[] = [
     'defaultPermissionParent'   => 'N', // Default permission for built in role Parent
     'defaultPermissionSupport'  => 'Y', // Default permission for built in role Support
     'categoryPermissionStaff'   => 'Y', // Should this action be available to user roles in the Staff category?
-    'categoryPermissionStudent' => 'Y', // Should this action be available to user roles in the Student category?
-    'categoryPermissionParent'  => 'Y', // Should this action be available to user roles in the Parent category?
+    'categoryPermissionStudent' => 'N', // Should this action be available to user roles in the Student category?
+    'categoryPermissionParent'  => 'N', // Should this action be available to user roles in the Parent category?
     'categoryPermissionOther'   => 'Y', // Should this action be available to user roles in the Other category?
 ];
+
+
 
 // Hooks
 $hooks[] = ''; // Serialised array to create hook and set options. See Hooks documentation online.
