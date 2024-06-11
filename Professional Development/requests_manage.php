@@ -36,5 +36,4 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 	print_r('Welcome to Professional Development');
 	echo '</pre>';
 
-
-}	
+}

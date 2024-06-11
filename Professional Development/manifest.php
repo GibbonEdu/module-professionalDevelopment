@@ -95,7 +95,7 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestApprovers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 // Add gibbonSettings entries
-$gibbonSetting[] = "INSERT INTO `gibbonSetting` (`scope` ,`name` ,`nameDisplay` ,`description` ,`value`) VALUES ('Professional Development', 'welcomeText', 'Welcome Text', 'A short message displayed on the landing page for Professional Development', '')";
+//$gibbonSetting[] = '';
 
 
 // Action rows 
@@ -104,9 +104,9 @@ $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`scope` ,`name` ,`nameDisplay` 
 $actionRows[] = [
     'name'                      => 'Manage Requests', // The name of the action (appears to user in the right hand side module menu)
     'precedence'                => '0',// If it is a grouped action, the precedence controls which is highest action in group
-    'category'                  => 'Administration', // Optional: subgroups for the right hand side module menu
-    'description'               => 'Allows the user to manage Professional Development requests.', // Text description
-    'URLList'                   => 'requests_manage.php,requests_manage_add.php', // List of pages included in this action
+    'category'                  => 'Requests', // Optional: subgroups for the right hand side module menu
+    'description'               => 'Manage Professional Development requests.', // Text description
+    'URLList'                   => 'requests_manage.php,requests_add.php', // List of pages included in this action
     'entryURL'                  => 'requests_manage.php', // The landing action for the page.
     'entrySidebar'              => 'Y', // Whether or not there's a sidebar on entry to the action
     'menuShow'                  => 'Y', // Whether or not this action shows up in menus or if it's hidden
@@ -121,7 +121,27 @@ $actionRows[] = [
     'categoryPermissionOther'   => 'Y', // Should this action be available to user roles in the Other category?
 ];
 
+$actionRows[] = [
+  'name'                      => 'Submit Request', // The name of the action (appears to user in the right hand side module menu)
+  'precedence'                => '0',// If it is a grouped action, the precedence controls which is highest action in group
+  'category'                  => 'Requests', // Optional: subgroups for the right hand side module menu
+  'description'               => 'Submit a request for Professional Development.', // Text description
+  'URLList'                   => 'requests_add.php, requests_manage.php', // List of pages included in this action
+  'entryURL'                  => 'requests_add.php', // The landing action for the page.
+  'entrySidebar'              => 'Y', // Whether or not there's a sidebar on entry to the action
+  'menuShow'                  => 'Y', // Whether or not this action shows up in menus or if it's hidden
+  'defaultPermissionAdmin'    => 'Y', // Default permission for built in role Admin
+  'defaultPermissionTeacher'  => 'Y', // Default permission for built in role Teacher
+  'defaultPermissionStudent'  => 'N', // Default permission for built in role Student
+  'defaultPermissionParent'   => 'N', // Default permission for built in role Parent
+  'defaultPermissionSupport'  => 'Y', // Default permission for built in role Support
+  'categoryPermissionStaff'   => 'Y', // Should this action be available to user roles in the Staff category?
+  'categoryPermissionStudent' => 'N', // Should this action be available to user roles in the Student category?
+  'categoryPermissionParent'  => 'N', // Should this action be available to user roles in the Parent category?
+  'categoryPermissionOther'   => 'Y', // Should this action be available to user roles in the Other category?
+];
+
 
 
 // Hooks
-$hooks[] = ''; // Serialised array to create hook and set options. See Hooks documentation online.
+//$hooks[] = ''; // Serialised array to create hook and set options. See Hooks documentation online.
