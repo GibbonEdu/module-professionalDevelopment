@@ -41,17 +41,15 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequest` (
     `eventType` ENUM('Internal', 'External') NOT NULL,
     `eventFocus` varchar(60) NOT NULL,
     `attendeeRole` varchar(60),
-    `attendeeCount` int(10) NOT NULL,
     `eventTitle` varchar(60) NOT NULL,
     `eventDescription` text NOT NULL,
     `eventLocation` text NOT NULL,
-    `personalRational` text,
-    `departmentImpact` text,
-    `schoolSharing` text,
+    `personalRational` text NOT NULL,
+    `departmentImpact` text NOT NULL,
+    `schoolSharing` text NOT NULL,
     `supportingEvidence` varchar(255) DEFAULT NULL,
     `notes` text,
-    `coverRequired` ENUM('Y', 'N'),
-    `coverAmount` varchar(60),    
+    `attendeeCount` int(10) NOT NULL,
     PRIMARY KEY (`professionalDevelopmentRequestID`)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
@@ -62,17 +60,19 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestPerson` (
   `registrationCost` decimal(12,2) NOT NULL,
   `miscellaneousCost` decimal(12,2),
   `costNotes` varchar(60),
+  `coverRequired` ENUM('Y', 'N'),
+  `coverAmount` varchar(60),
   PRIMARY KEY (`professionalDevelopmentRequestPersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestDays` (
   `professionalDevelopmentRequestDaysID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
   `professionalDevelopmentRequestID` int(10) unsigned zerofill NOT NULL,
-  `eventStartDate` date NOT NULL,
-  `eventEndDate` date NOT NULL,
-  `eventAllDay` tinyint(1) NOT NULL,
-  `eventStartTime` time NOT NULL DEFAULT '00:00:00',
-  `eventEndTime` time NOT NULL DEFAULT '00:00:00',
+  `startDate` date NOT NULL,
+  `endDate` date NOT NULL,
+  `allDay` tinyint(1) NOT NULL,
+  `startTime` time NOT NULL DEFAULT '00:00:00',
+  `endTime` time NOT NULL DEFAULT '00:00:00',
   PRIMARY KEY (`professionalDevelopmentRequestDaysID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 

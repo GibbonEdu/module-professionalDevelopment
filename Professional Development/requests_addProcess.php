@@ -17,12 +17,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-include '../../gibbon.php';
-include './moduleFunctions.php';
+use Gibbon\Data\Validator;
+use Gibbon\Services\Format;
 
-$URL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/name_add.php';
+require_once '../../gibbon.php';
+require_once  './moduleFunctions.php';
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_addProcess.php')) {
+$_POST = $container->get(Validator::class)->sanitize($_POST, ['description' => 'HTML']);
+
+$URL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/Professional Development/requests_add.php';
+
+$gibbonSchoolYearID = $_REQUEST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
+
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_add.php')) {
     // Access denied
     $URL = $URL.'&return=error0';
     header("Location: {$URL}");
