@@ -40,7 +40,7 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequest` (
     `status` ENUM('Requested','Approved','Rejected','Cancelled','Awaiting Final Approval','Draft') DEFAULT 'Requested' NOT NULL,
     `eventType` ENUM('Internal', 'External') NOT NULL,
     `eventFocus` varchar(60) NOT NULL,
-    `attendeeRole` varchar(60),
+    `attendeeCount` int(10) NOT NULL,
     `eventTitle` varchar(60) NOT NULL,
     `eventDescription` text NOT NULL,
     `eventLocation` text NOT NULL,
@@ -49,7 +49,6 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequest` (
     `schoolSharing` text NOT NULL,
     `supportingEvidence` varchar(255) DEFAULT NULL,
     `notes` text,
-    `attendeeCount` int(10) NOT NULL,
     PRIMARY KEY (`professionalDevelopmentRequestID`)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
@@ -57,7 +56,8 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestPerson` (
   `professionalDevelopmentRequestPersonID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
   `professionalDevelopmentRequestID` int(10) unsigned zerofill NOT NULL,
   `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
-  `registrationCost` decimal(12,2) NOT NULL,
+  `eventRole` varchar(60) NOT NULL,
+  `registrationCost` decimal(12,2),
   `miscellaneousCost` decimal(12,2),
   `costNotes` varchar(60),
   `coverRequired` ENUM('Y', 'N'),

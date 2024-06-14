@@ -23,7 +23,6 @@ use Gibbon\Services\Format;
 use Gibbon\Domain\Staff\StaffGateway;
 use Gibbon\Forms\DatabaseFormFactory;
 
-// Module includes
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -31,9 +30,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 	// Access denied
 	$page->addError(__('You do not have access to this action.'));
 } else {
-   // For a form
-   // Check out https:// gist.github.com/SKuipers/3a4de3a323ab9d0969951894c29940ae for a cheatsheet / guide
-
+    
     // Proceed!
     $page->breadcrumbs
         ->add(__('Manage Requests'), 'requests_manage.php')
@@ -70,6 +67,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $row = $form->addRow();
         $row->addLabel('attendeeRole', __('Participant Role'))->description(__('Are you presenting or an attendee?'));
         $row->addSelect('attendeeRole')->fromArray(['Attendee' => __('Attendee'), 'Presenting' => __('Presenting')])->required();
+
+    $row = $form->addRow();
+        $row->addLabel('attendeeCount', __('No. of Particpants'))->description(__m('Total number of people joining the event'));
+        $row->addNumber('attendeeCount')->onlyInteger(true)->minimum(0)->maximum(999)->maxLength(3)->required();
 
     $row = $form->addRow();
         $row->addLabel('eventTitle', 'Event Name');
@@ -160,7 +161,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $dateBlocks = $row->addCustomBlocks('dateTime', $session)
             ->fromTemplate($dateTimeBlock)
             ->settings([
-                'placeholder' => __('Date/Time Blocks will appear here...'),
+                'placeholder' => __('Date/Time will appear here...'),
                 'sortable' => true,
                 'orderName' => 'dateTimeOrder'
             ])
@@ -172,36 +173,55 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     
 
     //Template for Participant & Cost Block
-    $gibbonPersonID = $session->get('gibbonPersonID');
-
     $costBlock = $form->getFactory()->createTable()->setClass('blank');
 
-        $row = $costBlock->addRow()->addClass('w-3/4 flex justify-start items-center mt-1 ml-2 pr-8');
+        $row = $costBlock->addRow();
             $row->addLabel('staff', __('Staff Name'));
-            $row->addSelectStaff('gibbonPersonID')->photo(true, 'small')->setClass('w-76')->placeholder()->required()->selected($gibbonPersonID);
+            $row->addSelectStaff('gibbonPersonID')->photo(true, 'small')->setClass('flex-1 mr-1')->placeholder()->required();
+
+            $row->addLabel('eventRole', __('Participant Role'))->description(__('Are you presenting or an attendee?'));
+            $row->addSelect('eventRole')
+                ->fromArray(['Attendee' => __('Attendee'), 'Presenting' => __('Presenting')])
+                ->required();
 
         $row = $costBlock->addRow();
-            $row->addLabel('title', __('Cost Name'));
-            $row->addTextfield('title')
-                ->isRequired()
-                ->addClass('floatLeft');
-            
-            $row->addLabel('cost', __('Value'));
-            $row->addCurrency('cost')
-                ->isRequired()
+          
+            $row->addLabel('registrationCost', __('Registration Fee'));
+            $row->addCurrency('registrationCost')
+                ->addClass('floatNone')
+                ->minimum(0);
+
+            $row->addLabel('miscellaneousCost', __('Miscellaneous Expenses'));
+            $row->addCurrency('miscellaneousCost')
                 ->addClass('floatNone')
                 ->minimum(0);
     
-        $row = $costBlock->addRow()->addClass('showHide w-full');
+        $row = $costBlock->addRow();
             $col = $row->addColumn();
-            $col->addTextArea('description')
+            $col->addLabel('costNotes', __('Expense Notes'));
+            $col->addTextArea('costNotes')
                 ->setRows(2)
-                ->setClass('fullWidth floatNone')
-                ->placeholder(__('Cost Description'));
+                ->placeholder(__('Please provide a breakdown of all expenses if possible'));
+
+        $row = $costBlock->addRow();
+            $row->addLabel('coverRequired', __('Cover Required'));
+            $row->addYesNoRadio('coverRequired')
+                ->inline()
+                ->alignLeft()
+                ->required();
+
+        $row = $costBlock->addRow()->addClass('showHide');
+                $row->addSelect('coverAmount')->fromArray(['Tutor group' => __('Tutor group'), 'Duty' => __('Duty'), 'Min Periods' => __('1-5 Periods (include year 12 & 13 classes)')])->required()
+                    ->addClass('sm:max-w-full w-full');
+                
+        //$costBlock->toggleVisibilityByClass('coverRequired')->onRadio('coverRequired')->when('Y');
+        //$row = $costBlock->addRow()->addClass('coverRequired');
+        //$row->addLabel('coverRequired', __('Cover Amount'));
+      
     
         //Tool Button
         $addBlockButton = $form->getFactory()
-            ->createButton(__("Add Cost Block"))
+            ->createButton(__("Add Participants"))
             ->addClass('addBlock');
     
         //Custom Blocks
@@ -209,16 +229,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             $costBlocks = $row->addCustomBlocks("cost", $session)
                 ->fromTemplate($costBlock)
                 ->settings([
-                    'placeholder' => __('Cost Blocks will appear here...'),
+                    'placeholder' => __('Participants will appear here...'),
                     'sortable' => true,
                     'orderName' => 'costOrder'
                 ])
-                ->addBlockButton('showHide', 'Show/Hide', 'plus.png')
                 ->addToolInput($addBlockButton);
-            
+
     echo $form->getOutput();
 }
-
 ?>
 
 <script>
@@ -244,6 +262,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     }
 
     $(document).ready(function(){
+
+        $(radio + ':checked').each(coverSwap);
 
         $(date).removeClass('hasDatepicker').datepicker({onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
 
@@ -290,5 +310,17 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         }
         endTime.timepicker('option', {'minTime': $(this).val(), 'timeFormat': 'H:i', 'showDuration': true});
     });
+
+    $(document).on('change', radio, coverSwap);
+
+    //Javascript for Cover Amount
+    function coverSwap() {
+        var block = $(this).closest('tbody');
+        if ($(this).prop('id').startsWith('coverRequiredN')) {
+            block.find('.showHide').hide();
+        } else {
+            block.find('.showHide').show();
+        }
+    }
 
 </script>
