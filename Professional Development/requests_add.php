@@ -210,13 +210,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                 ->alignLeft()
                 ->required();
 
-        $row = $costBlock->addRow()->addClass('showHide');
-                $row->addSelect('coverAmount')->fromArray(['Tutor group' => __('Tutor group'), 'Duty' => __('Duty'), 'Min Periods' => __('1-5 Periods (include year 12 & 13 classes)')])->required()
-                    ->addClass('sm:max-w-full w-full');
-                
-        //$costBlock->toggleVisibilityByClass('coverRequired')->onRadio('coverRequired')->when('Y');
-        //$row = $costBlock->addRow()->addClass('coverRequired');
-        //$row->addLabel('coverRequired', __('Cover Amount'));
+        $row = $costBlock->addRow()->addClass('hideShow');
+        $row->addSelect('coverAmount')->fromArray(['Tutor group' => __('Tutor group'), 'Duty' => __('Duty'), 'Period1' => __('1-5 Periods (include year 12 & 13 classes)'), 'Period2' => __('6-10 Periods (include year 12 & 13 classes)'), 'Period3' => __('11-15 Periods (include year 12 & 13 classes)'), 'Period4' => __('16 Periods + (include year 12 & 13 classes)')])
+            ->description(__('Please provide an estimate of the amount of cover required.'))
+            ->addClass('w-full flex justify-between items-center mt-1 ml-2');
       
     
         //Tool Button
