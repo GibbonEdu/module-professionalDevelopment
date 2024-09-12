@@ -22,28 +22,94 @@ use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Domain\Staff\StaffGateway;
 use Gibbon\Forms\DatabaseFormFactory;
-
+use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
+use Gibbon\Module\ProfessionalDevelopment\Domain\RequestCostGateway;
+use Gibbon\Module\ProfessionalDevelopment\Domain\RequestDaysGateway;
+use Gibbon\Module\ProfessionalDevelopment\Domain\RequestPersonGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_add.php')) {
+//Checking if editing mode should be enabled
+$edit = false;
+$prefix = 'Submit';
+
+$mode = $_REQUEST['mode'] ?? '';
+$professionalDevelopmentRequestID = $_REQUEST['professionalDevelopmentRequestID'] ?? '';
+
+//Check if a mode and Request ID are given
+if (!empty($mode) && !empty($professionalDevelopmentRequestID)) {
+    //Get PD request from gateway
+    $requestsGateway = $container->get(RequestsGateway::class);
+    $pdRequest = $requestsGateway->getByID($professionalDevelopmentRequestID);    
+
+    //If the PD request exists, set to edit mode
+    if (!empty($pdRequest)) {
+        $edit = true;
+        $prefix = 'Edit';
+    }
+}
+
+$isDraft = !empty($pdRequest) && $pdRequest['status'] == 'Draft';
+
+$page->breadcrumbs->add(__($prefix . ' Request'));
+
+$gibbonPersonID = $session->get('gibbonPersonID');
+$highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/requests_manage.php', $connection2);
+
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_add.php') || ($edit && $highestAction != 'Manage Requests_full' && $pdRequest['gibbonPersonIDCreated'] != $gibbonPersonID)) {
 	// Access denied
 	$page->addError(__('You do not have access to this action.'));
+} else if ((isset($pdRequest) && empty($pdRequest)) || (!empty($mode) && !$edit)) {
+    $page->addError(__('Invalid Trip.'));
 } else {
-    
-    // Proceed!
-    $page->breadcrumbs
-        ->add(__('Manage Requests'), 'requests_manage.php')
-        ->add(__('Submit Request'));
 
-   if (isset($_GET['editID'])) {
-      $page->return->setEditLink($session->get('absoluteURL').'/index.php?q=/modules/Professional Development/requests_edit.php&professionalDevelopmentRequestID='.$_GET['editID']);
+    // Proceed
+    $moduleName = $session->get('module');
+    $gibbonSchoolYearID = $session->get('gibbonSchoolYearID');
+
+    $settingGateway = $container->get(SettingGateway::class);
+
+    //Return Messages
+    $page->return->addReturns([
+        'warning3' => __('Your request was successful, but some required fields were missing. Please update your request data.'),
+        'warning4' => __('Your request was successful, but there are no dates set for this request. Please add dates and update your request.'),
+        'warning5' => __('Your request was successful, but there was a problem saving the cost details. Please check the costs and update your request.'),
+        'warning6' => __('Your request was successful, but no participants have been added to the request. Please check the participants list and update your request.'),
+    ]);
+
+   if (!$edit && !empty($professionalDevelopmentRequestID)) {
+      $page->return->setEditLink($session->get('absoluteURL').'/index.php?q=/modules/Professional Development/requests_view.php&professionalDevelopmentRequestID='.$professionalDevelopmentRequestID);
    }
- 
-   $form = Form::create('requestForm', $session->get('absoluteURL').'/modules/'.$session->get('module').'/requests_addProcess.php');
-   $form->setFactory(DatabaseFormFactory::create($pdo));
 
+   //PD trip People Data
+   $tripPeople = [];
+
+   if ($edit) {
+    $requestPersonGateway = $container->get(RequestPersonGateway::class);
+    $requestPersonCriteria = $requestPersonGateway->newQueryCriteria()
+        ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID);
+
+    $tripPeople = $requestPersonGateway->queryRequestPeople($requestPersonCriteria)->getColumn('gibbonPersonID');
+}
+
+    //Staff/Teacher Data for Multi-Select
+    $staffGateway = $container->get(StaffGateway::class);
+    $staffCriteria = $staffGateway->newQueryCriteria()
+        ->sortBy(['surname', 'preferredName']);
+
+    $teachers = array_reduce($staffGateway->queryAllStaff($staffCriteria)->toArray(), function ($array, $staff) use ($tripPeople) {
+        $list = in_array($staff['gibbonPersonID'], $tripPeople) ? 'destination' : 'source';
+        $array[$list][$staff['gibbonPersonID']] = Format::name($staff['title'], $staff['preferredName'], $staff['surname'], 'Staff', true, true);
+        return $array;
+    });
+
+   //Submit Request Form
+   $form = Form::create('requestForm', $session->get('absoluteURL').'/modules/'.$moduleName.'/requests_addProcess.php');
+
+   $form->setFactory(DatabaseFormFactory::create($pdo));
    $form->addHiddenValue('address', $session->get('address'));
+   $form->addHiddenValue('saveMode', 'Submit');
 
    $form->setTitle(__('Submit Request'));
 
@@ -56,7 +122,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $row->addSelect('eventType')->fromArray(['Internal' => __('Internal'), 'External' => __('External')])->required();
 
     $row = $form->addRow();
-        $row->addLabel('eventFocus', __(' Area of Focus (conference or training)'));
+        $row->addLabel('eventFocus', __('Area of Focus (conference or training)'));
         $row->addSelect('eventFocus')->fromArray(['IB' => __('IB'), 'IGCSE' => __('IGCSE'), 'Other' => __('Other')])->required();
 
     $form->toggleVisibilityByClass('eventFocus')->onSelect('eventFocus')->when('Other');
@@ -65,8 +131,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $row->addTextArea('eventFocus')->setRows(1)->required();
 
     $row = $form->addRow();
-        $row->addLabel('attendeeRole', __('Participant Role'))->description(__('Are you presenting or an attendee?'));
-        $row->addSelect('attendeeRole')->fromArray(['Attendee' => __('Attendee'), 'Presenting' => __('Presenting')])->required();
+        $row->addLabel('attendeeRole', __('Participant(s) Role'))->description(__('Are you presenting or an attendee?'));
+        $row->addSelect('attendeeRole')->fromArray(['Attendee' => __('Attendee'), 'Presenting' => __('Presenting'), 'Both' => __('Both')])->required();
 
     $row = $form->addRow();
         $row->addLabel('attendeeCount', __('No. of Particpants'))->description(__m('Total number of people joining the event'));
@@ -97,7 +163,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $col = $form->addRow()->addColumn();
         $col->addLabel('personalRational', __('PERSONAL RATIONAL'))->description(__('How does the course/conference reflect your personal interests, professional goals, or career path?'));
         $col->addTextArea('personalRational')->setRows(2)->setRequired(true);
-
     
     $col = $form->addRow()->addColumn();
         $col->addLabel('departmentImpact', __('DEPARTMENTAL AND SCHOOL IMPACT'))->description(__('How will this training or course reflect the strategic plan of the school or the development of your department?'));
@@ -116,12 +181,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $row->addTextArea('notes')->setRows(5);
 
     
-    //Date & Time Section
+    //Date Section
     $row = $form->addRow();
-        $row->addHeading(__('Date & Time'));
+        $row->addHeading(__('Date'));
     
-    
-    //Template for Date & Time Block
+    //Template for Date Block
     $dateTimeBlock = $form->getFactory()->createTable()->setClass('blank');
 
         $row = $dateTimeBlock->addRow();
@@ -141,84 +205,49 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
         $dateTimeBlock->addRow()->addClass('h-2');
 
-        $row = $dateTimeBlock->addRow();
-            $row->addLabel('time', 'Start and End Times for each day. Leave blank if all day.')
-                ->addClass('font-bold');
-
-        $row = $dateTimeBlock->addRow();
-            $row->addLabel('startTime', __('Start Time'));
-            $row->addTime('startTime')
-                ->placeholder('Start Time');
-
-            $row->addLabel('endTime', __('End Time'));
-            $row->addTime('endTime')
-                ->placeholder('End Time');
-
-    $addDateTimeBlockButton = $form->getFactory()->createButton(__('Add Date & Time'))->addClass('addBlock');
+    $addDateTimeBlockButton = $form->getFactory()->createButton(__('Add Date'))->addClass('addBlock');
     
-    //Creating Custom Blocks using the template of Date & Time block
+    //Creating Custom Blocks using the template of Date Block
     $row = $form->addRow();
         $dateBlocks = $row->addCustomBlocks('dateTime', $session)
             ->fromTemplate($dateTimeBlock)
             ->settings([
-                'placeholder' => __('Date/Time will appear here...'),
+                'placeholder' => __('Dates will appear here...'),
                 'sortable' => true,
                 'orderName' => 'dateTimeOrder'
             ])
             ->addToolInput($addDateTimeBlockButton);
 
-    //Participant & Cost Section
+
+    //Cost Section
     $row = $form->addRow();
-        $row->addHeading(__('Participants and Costs'));
-    
+        $row->addHeading(__('Costs'));
 
-    //Template for Participant & Cost Block
+    //Template for Cost Block
     $costBlock = $form->getFactory()->createTable()->setClass('blank');
-
         $row = $costBlock->addRow();
-            $row->addLabel('staff', __('Staff Name'));
-            $row->addSelectStaff('gibbonPersonID')->photo(true, 'small')->setClass('flex-1 mr-1')->placeholder()->required();
-
-            $row->addLabel('eventRole', __('Participant Role'))->description(__('Are you presenting or an attendee?'));
-            $row->addSelect('eventRole')
-                ->fromArray(['Attendee' => __('Attendee'), 'Presenting' => __('Presenting')])
-                ->required();
-
-        $row = $costBlock->addRow();
-          
-            $row->addLabel('registrationCost', __('Registration Fee'));
-            $row->addCurrency('registrationCost')
+            $row->addLabel('title', __('Cost Name'));
+            $row->addTextfield('title')
+                ->isRequired()
+                ->addClass('floatLeft');
+        
+            $row->addLabel('cost', __('Value'));
+            $row->addCurrency('cost')
+                ->isRequired()
                 ->addClass('floatNone')
                 ->minimum(0);
 
-            $row->addLabel('miscellaneousCost', __('Miscellaneous Expenses'));
-            $row->addCurrency('miscellaneousCost')
-                ->addClass('floatNone')
-                ->minimum(0);
-    
-        $row = $costBlock->addRow();
+        $row = $costBlock->addRow()->addClass('showHide w-full');
             $col = $row->addColumn();
-            $col->addLabel('costNotes', __('Expense Notes'));
-            $col->addTextArea('costNotes')
-                ->setRows(2)
-                ->placeholder(__('Please provide a breakdown of all expenses if possible'));
-
-        $row = $costBlock->addRow();
-            $row->addLabel('coverRequired', __('Cover Required'));
-            $row->addYesNoRadio('coverRequired')
-                ->inline()
-                ->alignLeft()
-                ->required();
-
-        $row = $costBlock->addRow()->addClass('hideShow');
-        $row->addSelect('coverAmount')->fromArray(['Tutor group' => __('Tutor group'), 'Duty' => __('Duty'), 'Period1' => __('1-5 Periods (include year 12 & 13 classes)'), 'Period2' => __('6-10 Periods (include year 12 & 13 classes)'), 'Period3' => __('11-15 Periods (include year 12 & 13 classes)'), 'Period4' => __('16 Periods + (include year 12 & 13 classes)')])
-            ->description(__('Please provide an estimate of the amount of cover required.'))
-            ->addClass('w-full flex justify-between items-center mt-1 ml-2');
+                $col->addTextArea('description')
+                    ->setRows(2)
+                    ->setClass('fullWidth floatNone')
+                    ->placeholder(__('Cost Description'));
       
     
         //Tool Button
-        $addBlockButton = $form->getFactory()
-            ->createButton(__("Add Participants"))
+        $addCostBlockButton = $form->getFactory()
+            ->createButton(__("Add Cost"))
             ->addClass('addBlock');
     
         //Custom Blocks
@@ -226,60 +255,103 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             $costBlocks = $row->addCustomBlocks("cost", $session)
                 ->fromTemplate($costBlock)
                 ->settings([
-                    'placeholder' => __('Participants will appear here...'),
+                    'placeholder' => __('Cost will appear here...'),
                     'sortable' => true,
                     'orderName' => 'costOrder'
                 ])
-                ->addToolInput($addBlockButton);
+                ->addBlockButton('showHide', 'Show/Hide', 'plus.png')
+                ->addToolInput($addCostBlockButton);
+
+    //Participants section
+    $row = $form->addRow();
+        $row->addHeading(__('Participants'));
+
+    $row = $form->addRow();
+        $col = $row->addColumn();
+            $col->addLabel('teachers', __('Teachers/Staff'));
+
+            $multiSelect = $col->addMultiSelect('teachers')
+                ->isRequired();
+
+            $multiSelect->source()->fromArray($teachers['source'] ?? []);
+            $multiSelect->destination()->fromArray($teachers['destination'] ?? []);
+
+    if ($edit) {
+        //Add parameters for editing
+        $form->addHiddenValue('mode', 'edit');
+        $form->addHiddenValue('professionalDevelopmentRequestID', $professionalDevelopmentRequestID);
+
+        //Add view Header
+        $form->addHeaderAction('view', __('View'))
+            ->setURL('/modules/' . $moduleName . '/requests_view.php')
+            ->addParam('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
+            ->displayLabel();
+        
+        //Load values into form
+        $form->loadAllValuesFrom($pdRequest);
+
+         //Get Cost Data and add to CostBlocks
+         $requestCostGateway = $container->get(RequestCostGateway::class);
+         $costCriteria = $requestCostGateway->newQueryCriteria()
+             ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
+             ->sortBy(['professionalDevelopmentRequestCostID']);
+ 
+         $costs = $requestCostGateway->queryRequestCost($costCriteria);
+
+         foreach ($costs as $cost) {
+             $costBlocks->addBlock($cost['professionalDevelopmentRequestCostID'], $cost);
+         }
+
+         //Get Date Data and Add to DateBlocks
+        $requestDaysGateway = $container->get(RequestDaysGateway::class);
+        $daysCriteria = $requestDaysGateway->newQueryCriteria()
+            ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
+            ->sortBy(['professionalDevelopmentRequestDaysID']);
+
+        $days = $requestDaysGateway->queryRequestDays($daysCriteria);
+
+        foreach ($days as $day) {
+            $day['startDate'] = Format::date($day['startDate']);
+            $day['endDate'] = Format::date($day['endDate']);
+            
+            $dateBlocks->addBlock($day['professionalDevelopmentRequestDaysID'], $day);
+        }
+    }
+
+    if ($edit && !$isDraft) {
+        $form->addRow()->addHeading(__('Log'));
+        $col = $form->addRow()->addColumn();
+            $col->addLabel('changeSummary', __('Change Summary'))->description(__('Please briefly describe the changes you have made to this request. This summary will be added to the request log.'));
+            $col->addTextarea('changeSummary')->setRows(2)->required();
+    }
+
+    $row = $form->addRow('stickySubmit');
+    if (!$edit || $isDraft) {
+        $col = $row->addColumn()->addClass('items-center');
+        $col->addButton(__('Save Draft'))->onClick('saveDraft()')->addClass('rounded-sm w-auto mr-2');
+    }
+    $col = $row->addColumn()->addClass('items-center');
+    $col->addSubmit();
 
     echo $form->getOutput();
 }
-?>
 
+?>
 <script>
 
-    //This javascript is for the Date & Time Blocks
+    //This javascript is for the Date Blocks
     var date = 'input[id*="Date"]';
-    var time = 'input[id*="Time"]';
 
     $(document).on('click', '.addBlock', function () {
         $(date).removeClass('hasDatepicker').datepicker({'timeFormat': 'H:i', onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
-        $(time).removeClass('hasTimepicker').timepicker({'timeFormat': 'H:i', onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
     });
 
-    function setTimepicker(input) {
-        input.removeClass('hasTimepicker').timepicker({
-            'scrollDefault': 'now',
-            'timeFormat': 'H:i',
-            'minTime': '00:00',
-            'maxTime': '23:59',
-            onSelect: function(){$(this).blur();},
-            onClose: function(){$(this).change();}
-        });
-    }
-
     $(document).ready(function(){
-
-        $(radio + ':checked').each(coverSwap);
-
         $(date).removeClass('hasDatepicker').datepicker({onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
-
-        //This is to ensure that loaded blocks have timepickers
-        $(time).each(function() {
-            setTimepicker($(this));
-        });
 
         //Ensure that loaded dates have correct max and min dates.
         $('input[id^=startDate]').each(function() {
             var endDate = $('#' + $(this).prop('id').replace('start', 'end'));
-        });
-
-        //Ensure that loaded endTimes are properly chained.
-        $('input[id^=endTime]').each(function() {
-            var startTime = $('#' + $(this).prop('id').replace('end', 'start'));
-            if (startTime.val() != "") {
-                $(this).timepicker('option', {'minTime': startTime.val(), 'timeFormat': 'H:i', 'showDuration': true});
-            }
         });
 
     });
@@ -300,24 +372,21 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         startDate.datepicker('option', {'maxDate': $(this).val()});
     });
 
-    $(document).on('changeTime', 'input[id^=startTime]', function() {
-        var endTime = $('#' + $(this).prop('id').replace('start', 'end'));
-        if (endTime.val() == "" || $(this).val() > endTime.val()) {
-            endTime.val($(this).val());
-        }
-        endTime.timepicker('option', {'minTime': $(this).val(), 'timeFormat': 'H:i', 'showDuration': true});
-    });
+    function saveDraft() {
+            $('option', '#teachers').each(function() {
+                $(this).prop('selected', true);
+            });
 
-    $(document).on('change', radio, coverSwap);
+            var form = LiveValidationForm.getInstance(document.getElementById('requestForm'));
 
-    //Javascript for Cover Amount
-    function coverSwap() {
-        var block = $(this).closest('tbody');
-        if ($(this).prop('id').startsWith('coverRequiredN')) {
-            block.find('.showHide').hide();
-        } else {
-            block.find('.showHide').show();
-        }
+            if (LiveValidation.massValidate(form.fields)) {
+                $('button[id="Save Draft"]').prop('disabled', true);
+                setTimeout(function() {
+                    $('button[id="Save Draft"]').wrap('<span class="submitted"></span>');
+                }, 500);
+                $('input[name="saveMode"]').val('Draft');
+                document.getElementById('requestForm').submit();
+            }
     }
 
 </script>

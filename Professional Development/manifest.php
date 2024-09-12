@@ -30,16 +30,15 @@ $author      = 'Ali';
 $url         = 'https://github.com/ali-ichk/module-professionalDevelopment';
 
 // Module tables & gibbonSettings entries
-$moduleTables[] = "CREATE TABLE `professionalDevelopmentRequest` (
+$moduleTables[] = "CREATE TABLE `professionalDevelopmentRequests` (
     `professionalDevelopmentRequestID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
     `gibbonSchoolYearID` int(3) unsigned zerofill NOT NULL,
     `gibbonPersonIDCreated` int(10) unsigned zerofill NOT NULL,
     `timestampCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `gibbonPersonIDModified` int(10) unsigned zerofill NOT NULL,
-    `timestampModified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `status` ENUM('Requested','Approved','Rejected','Cancelled','Awaiting Final Approval','Draft') DEFAULT 'Requested' NOT NULL,
     `eventType` ENUM('Internal', 'External') NOT NULL,
     `eventFocus` varchar(60) NOT NULL,
+    `attendeeRole` varchar(60) NOT NULL,
     `attendeeCount` int(10) NOT NULL,
     `eventTitle` varchar(60) NOT NULL,
     `eventDescription` text NOT NULL,
@@ -52,28 +51,29 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequest` (
     PRIMARY KEY (`professionalDevelopmentRequestID`)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
-$moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestPerson` (
-  `professionalDevelopmentRequestPersonID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
-  `professionalDevelopmentRequestID` int(10) unsigned zerofill NOT NULL,
-  `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
-  `eventRole` varchar(60) NOT NULL,
-  `registrationCost` decimal(12,2),
-  `miscellaneousCost` decimal(12,2),
-  `costNotes` varchar(60),
-  `coverRequired` ENUM('Y', 'N'),
-  `coverAmount` varchar(60),
-  PRIMARY KEY (`professionalDevelopmentRequestPersonID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-
 $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestDays` (
   `professionalDevelopmentRequestDaysID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
   `professionalDevelopmentRequestID` int(10) unsigned zerofill NOT NULL,
   `startDate` date NOT NULL,
   `endDate` date NOT NULL,
   `allDay` tinyint(1) NOT NULL,
-  `startTime` time NOT NULL DEFAULT '00:00:00',
-  `endTime` time NOT NULL DEFAULT '00:00:00',
   PRIMARY KEY (`professionalDevelopmentRequestDaysID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+$moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestCost` (
+  `professionalDevelopmentRequestCostID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+  `professionalDevelopmentRequestID` int(10) unsigned zerofill NOT NULL,
+  `title` varchar(60) NOT NULL,
+  `description` text NOT NULL,
+  `cost` decimal(12, 2) NOT NULL,
+  PRIMARY KEY (`professionalDevelopmentRequestCostID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+$moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestPerson` (
+  `professionalDevelopmentRequestPersonID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT,
+  `professionalDevelopmentRequestID` int(10) unsigned zerofill NOT NULL,
+  `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
+  PRIMARY KEY (`professionalDevelopmentRequestPersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
 $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestLog` (
@@ -81,7 +81,7 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestLog` (
   `professionalDevelopmentRequestID` int(10) unsigned zerofill NOT NULL,
   `gibbonPersonID` int(10) unsigned zerofill NOT NULL,
   `requestStatus` enum('Request','Cancellation','Approval - Partial','Approval - Final','Rejection','Comment','Edit') NOT NULL,
-  `comment` text,
+  `comment` text NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`professionalDevelopmentRequestLogID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
@@ -118,7 +118,7 @@ $actionRows[] = [
     'categoryPermissionStaff'   => 'Y', // Should this action be available to user roles in the Staff category?
     'categoryPermissionStudent' => 'N', // Should this action be available to user roles in the Student category?
     'categoryPermissionParent'  => 'N', // Should this action be available to user roles in the Parent category?
-    'categoryPermissionOther'   => 'Y', // Should this action be available to user roles in the Other category?
+    'categoryPermissionOther'   => 'N', // Should this action be available to user roles in the Other category?
 ];
 
 $actionRows[] = [
@@ -138,7 +138,7 @@ $actionRows[] = [
   'categoryPermissionStaff'   => 'Y', // Should this action be available to user roles in the Staff category?
   'categoryPermissionStudent' => 'N', // Should this action be available to user roles in the Student category?
   'categoryPermissionParent'  => 'N', // Should this action be available to user roles in the Parent category?
-  'categoryPermissionOther'   => 'Y', // Should this action be available to user roles in the Other category?
+  'categoryPermissionOther'   => 'N', // Should this action be available to user roles in the Other category?
 ];
 
 
