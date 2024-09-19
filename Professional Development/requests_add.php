@@ -118,7 +118,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $row->addHeading('Basic Information');
 
     $row = $form->addRow();
-        $row->addLabel('eventType', __('Type'));
+        $row->addLabel('eventType', __('Event Type'));
         $row->addSelect('eventType')->fromArray(['Internal' => __('Internal'), 'External' => __('External')])->required();
 
     $row = $form->addRow();
@@ -172,15 +172,21 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $col->addLabel('schoolSharing', __('SCHOOL SHARING'))->description(__('A requirement of the school’s support will be that you return some of what you learn to the staff at ICHK whether that be at departmental level and/or a whole school level during a PD session. How do you envisage sharing the knowledge/information/resources you glean?'));
         $col->addTextArea('schoolSharing')->setRows(2)->setRequired(true);
 
-    $row = $form->addRow();
-        $row->addLabel('supportingEvidence', __('Supporting Evidence (If applicable)'))->description(__('Please upload any supporting evidence that you think might be useful in assessing your application'));
-        $row->addFileUpload('supportingEvidence');
+        if(!$edit) {
+            $row = $form->addRow();
+                $row->addLabel('supportingEvidence', __('Supporting Evidence (If applicable)'))->description(__('Please upload any supporting evidence that you think might be useful in assessing your application'));
+                $row->addFileUpload('supportingEvidence');
+        } else {
+            $row = $form->addRow();
+                $row->addLabel('supportingEvidence', __('Supporting Evidence (If applicable)'))->description(__('Please upload any supporting evidence that you think might be useful in assessing your application'));
+                $row->addFileUpload('supportingEvidenceFile')
+                    ->setAttachment('supportingEvidence', $gibbon->session->get('absoluteURL'), $pdRequest['supportingEvidence']);
+        }
 
     $row = $form->addRow()->addClass('notes');
         $row->addLabel('notes', __('Comments/Notes'));
         $row->addTextArea('notes')->setRows(5);
 
-    
     //Date Section
     $row = $form->addRow();
         $row->addHeading(__('Date'));
@@ -302,7 +308,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
              $costBlocks->addBlock($cost['professionalDevelopmentRequestCostID'], $cost);
          }
 
-         //Get Date Data and Add to DateBlocks
+         //Get Date Data and add to DateBlocks
         $requestDaysGateway = $container->get(RequestDaysGateway::class);
         $daysCriteria = $requestDaysGateway->newQueryCriteria()
             ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)

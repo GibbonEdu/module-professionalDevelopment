@@ -1,4 +1,5 @@
 <?php
+
 /*
 Gibbon, Flexible & Open School System
 Copyright (C) 2010, Ross Parker
@@ -17,16 +18,33 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Module includes
+use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
+
 require_once __DIR__ . '/moduleFunctions.php';
 
-if (!isActionAccessible($guid, $connection2, '/modules/Module Name/name_edit.php')) {
-	// Access denied
+$page->breadcrumbs->add(__('Manage Professional Development Requests'), 'requests_manage.php')
+                  ->add(__('View Request'));
+
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_manage.php')) {
 	$page->addError(__('You do not have access to this action.'));
 } else {
-    $ID = $_POST['ID']; // The ID / primary key param posted from the name_view page.
+    $professionalDevelopmentRequestID = $_GET['professionalDevelopmentRequestID'];
 
-    // For a form
-    // Check out https:// gist.github.com/SKuipers/3a4de3a323ab9d0969951894c29940ae for a cheatsheet / guide
-    // Don't forget to use the posted ID and a query to be able to $form->loadAllValuesFrom($values);
+    $requestsGateway = $container->get(RequestsGateway::class);
+
+    if (empty($professionalDevelopmentRequestID) || !$requestsGateway->exists($professionalDevelopmentRequestID)) {
+        $page->addError('No request selected.');
+    } else {
+        $gibbonPersonID = $session->get("gibbonPersonID");
+        $highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/requests_manage.php', $connection2);
+
+        if (hasAccess($container, $professionalDevelopmentRequestID, $gibbonPersonID, $highestAction)) {
+            $readOnly = $highestAction == 'Manage Requests_view';
+            renderRequest($container, $professionalDevelopmentRequestID, false, $readOnly);
+        } else {
+            $page->addError(__('You do not have access to this action.'));
+        }
+    }
 }	
+
+?>
