@@ -28,6 +28,7 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestLogGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestCostGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestDaysGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestPersonGateway;
+use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
 
 require_once '../../gibbon.php';
 require_once  './moduleFunctions.php';
@@ -241,7 +242,41 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $requestsGateway->commit();
 
-    //TO-DO Add sending Notificarion features when a request is submitted
+    //Send Notifications when a request is submitted
+    if ($saveMode != 'Draft' && ($isDraft || !$edit)) {
+        $notificationGateway = $container->get(NotificationGateway::class);
+        $notificationSender = new NotificationSender($notificationGateway, $session);
+
+        $event = new NotificationEvent('Professional Development', 'New Request');
+
+        $event->setNotificationText(__('{person} has submitted a new PD Request: {request}', ['person' => $personName, 'request' => $requestData['eventTitle']]));
+        $event->setActionLink('/index.php?q=/modules/Professional Development/requests_approve.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID);
+
+        $requestApprovalType = $settingGateway->getSettingByScope('Professional Development', 'requestApprovalType');
+        $requestApproversGateway = $container->get(RequestApproversGateway::class);
+
+        if ($requestApprovalType == 'Chain Of All') {
+            $firstApprover = $requestApproversGateway->selectNextApprover($professionalDevelopmentRequestID);
+            if ($firstApprover->isNotEmpty()) {
+                $event->addRecipient($firstApprover->fetch()['gibbonPersonID']);
+            }
+        } else {
+            $approverCriteria = $requestApproversGateway->newQueryCriteria();
+            $approvers = $requestApproversGateway->queryApprovers($approverCriteria);
+            foreach ($approvers as $approver) {
+                $event->addRecipient($approver['gibbonPersonID']);
+            }
+        }
+
+        //Send all notifications
+        $event->pushNotifications($notificationGateway, $notificationSender);
+
+        // Add a notification for the trip owner
+        $notificationSender->addNotification($gibbonPersonID, __('You have submitted a new PD Request (pending approval): {request}', ['request' => $requestData['eventTitle']]), 'Professional Development', '/index.php?q=/modules/Professional Development/requests_view.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID);
+
+        $notificationSender->sendNotifications();
+    }
+
 
     if ($partialFail) {
         $URL .= '&return='.$returnCode.'&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID . ($edit ? '&mode=edit' : '');
@@ -253,5 +288,3 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     header("Location: {$URL}");
     exit;
 }
-
-

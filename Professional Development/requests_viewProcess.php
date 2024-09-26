@@ -80,12 +80,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             exit();
         }
 
-    //$notificationGateway = $container->get(NotificationGateway::class);
-    //$notificationSender = new NotificationSender($notificationGateway, $session);
+    $notificationGateway = $container->get(NotificationGateway::class);
+    $notificationSender = new NotificationSender($notificationGateway, $session);
 
-    //tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $personName, $tripLogGateway, $trip, $comment, $notificationSender);
+    requestCommentNotifications($professionalDevelopmentRequestID, $gibbonPersonID, $personName, $requestLogGateway, $pdRequest, $comment, $notificationSender);
 
-    //$notificationSender->sendNotifications();
+    $notificationSender->sendNotifications();
 
         $URL .= '&return=success0';
         header("Location: {$URL}");

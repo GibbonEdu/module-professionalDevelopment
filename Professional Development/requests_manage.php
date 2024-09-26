@@ -32,12 +32,10 @@ require_once __DIR__ . '/moduleFunctions.php';
 
 $page->breadcrumbs->add(__('Manage Professional Development Requests'));
 
-
 if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_manage.php')) {
 	// Access denied
 	$page->addError(__('You do not have access to this action.'));
 } else {
-
 	$highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/requests_manage.php', $connection2);
 
 	if (empty($highestAction)) {
@@ -51,6 +49,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
      $settingGateway = $container->get(SettingGateway::class);
     
      $requestApprovalType = $settingGateway->getSettingByScope('Professional Development', 'requestApprovalType');
+     $headApproval = $settingGateway->getSettingByScope('Professional Development', 'headApproval');
      $expiredUnapproved = $settingGateway->getSettingByScope('Professional Development', 'expiredUnapprovedFilter');
 
      //Permissions
@@ -61,7 +60,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $isApprover = !empty($approver);
     $finalApprover = $isApprover ? boolval($approver['finalApprover']) : false;
 
-    $checkAwaitingApproval = ($isApprover && $requestApprovalType == 'Chain Of All') || $finalApprover;
+    $checkAwaitingApproval = ($isApprover && $requestApprovalType == 'Chain Of All') || ($headApproval && $finalApprover);
 
      //Department Data
      $departmentGateway = $container->get(DepartmentGateway::class);

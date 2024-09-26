@@ -41,4 +41,13 @@ class RequestPersonGateway extends QueryableGateway
         return $this->runQuery($query, $criteria);
     }
 
+    public function isInvolved($professionalDevelopmentRequestID, $gibbonPersonID) {
+        $result = $this->selectBy([
+            'professionalDevelopmentRequestID'  => $professionalDevelopmentRequestID,
+            'gibbonPersonID'        => $gibbonPersonID
+        ]);
+
+        return $result->isNotEmpty();
+    }
+
 }
