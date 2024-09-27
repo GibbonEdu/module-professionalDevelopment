@@ -17,7 +17,7 @@ class RequestApproversGateway extends QueryableGateway
     use TableAware;
 
     private static $tableName = 'professionalDevelopmentRequestApprovers'; 
-    private static $primaryKey = 'professionalDevelopmentRequestRequestApproversID'; //The primaryKey of said table
+    private static $primaryKey = 'professionalDevelopmentRequestApproversID'; //The primary Key of said table
     private static $searchableColumns = [];
 
     public function selectApproverByPerson($gibbonPersonID) {
@@ -49,4 +49,74 @@ class RequestApproversGateway extends QueryableGateway
 
         return $this->runSelect($select);
     }
+
+    public function selectStaffForApprover($ignore = true) {
+        $select = $this
+            ->newSelect()
+            ->from('gibbonPerson')
+            ->cols([
+                'gibbonPerson.gibbonPersonID', 'title', 'surname', 'preferredName', 'username'
+            ])
+            ->innerJoin('gibbonStaff', 'gibbonStaff.gibbonPersonID=gibbonPerson.gibbonPersonID')
+            ->where('gibbonPerson.status=:status')
+            ->bindValue('status', 'Full')
+            ->orderBy(['surname', 'preferredName']);
+
+        if ($ignore) {
+            $select->leftJoin($this->getTableName(), 'professionalDevelopmentRequestApprovers.gibbonPersonID=gibbonPerson.gibbonPersonID')
+                ->where('professionalDevelopmentRequestApprovers.gibbonPersonID IS NULL');
+        }
+
+        $result = $this->runSelect($select);
+        $users = array_reduce($result->fetchAll(), function ($group, $item) {
+            $group[$item['gibbonPersonID']] = Format::name($item['title'], $item['preferredName'], $item['surname'], 'Staff', true, true) . ' (' . $item['username'] . ')';
+            return $group;
+        }, array());
+
+        return $users;
+    }
+
+    public function insertApprover($gibbonPersonID, $finalApprover) {
+        $select = $this
+            ->newSelect()
+            ->from($this->getTableName())
+            ->cols(['MAX(sequenceNumber) + 1 as sequenceNumber']);
+        $result = $this->runSelect($select);
+
+        if ($result->rowCount() > 0) {
+            $sequenceNumber = $result->fetch()['sequenceNumber'];
+        } else {
+            return false;
+        }
+
+        $this->insert(['gibbonPersonID' => $gibbonPersonID, 'sequenceNumber' => $sequenceNumber, 'finalApprover' => $finalApprover]);
+        return true;
+    }
+
+    public function queryApprovers($critera) {
+        $query = $this
+            ->newQuery()
+            ->from($this->getTableName())
+            ->cols([
+                'professionalDevelopmentRequestApproversID', 'gibbonPerson.gibbonPersonID', 'title', 'preferredName', 'surname', 'sequenceNumber', 'finalApprover'
+            ])
+            ->leftJoin('gibbonPerson', 'professionalDevelopmentRequestApprovers.gibbonPersonID=gibbonPerson.gibbonPersonID');
+
+        return $this->runQuery($query, $critera);
+    }
+
+    public function updateSequence($order) {
+        $this->db()->beginTransaction();
+
+        for ($count = 0; $count < count($order); $count++) {
+            if (!$this->update($order[$count], ['sequenceNumber' => $count])) {
+                $this->db()->rollback();
+                return false;
+            }
+        }
+
+        $this->db()->commit();
+        return true;
+    }
+
 }

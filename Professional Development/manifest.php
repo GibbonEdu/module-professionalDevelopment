@@ -27,7 +27,7 @@ $type        = "Additional";
 $category    = 'Other';
 $version     = '0.0.01';
 $author      = 'Ali';
-$url         = 'https://github.com/ali-ichk/module-professionalDevelopment';
+$url         = 'https://github.com/GibbonEdu/module-professionalDevelopment';
 
 // Module tables & gibbonSettings entries
 $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequests` (
@@ -94,6 +94,18 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestApprovers` (
   PRIMARY KEY (`professionalDevelopmentRequestApproversID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
+$moduleTables[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
+VALUES
+(NULL, 'Professional Development', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a request has to go through.', 'One Of'),
+(NULL, 'Professional Development', 'headApproval', 'Head Approval', 'A Final Approval is required before the request becomes approved.', '1'),
+(NULL, 'Professional Development', 'expiredUnapprovedFilter', 'Disable View of Exipired Unapproved Requests', 'If selected then any request which has not been approved and has passed the initial start date will no longer be shown.', '0')
+";
+
+$moduleTables[] = "INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `type`, `scopes`, `active`)
+VALUES
+('Request Approval', 'Professional Development', 'Manage Requests_full', 'Additional', 'All', 'Y'),
+('New Request', 'Professional Development', 'Manage Requests_full', 'Additional', 'All', 'Y');";
+
 // Add gibbonSettings entries
 //$gibbonSetting[] = '';
 
@@ -106,15 +118,15 @@ $actionRows[] = [
     'precedence'                => '0',// If it is a grouped action, the precedence controls which is highest action in group
     'category'                  => 'Requests', // Optional: subgroups for the right hand side module menu
     'description'               => 'Manage Professional Development requests.', // Text description
-    'URLList'                   => 'requests_manage.php,requests_add.php', // List of pages included in this action
+    'URLList'                   => 'requests_manage.php',
     'entryURL'                  => 'requests_manage.php', // The landing action for the page.
-    'entrySidebar'              => 'Y', // Whether or not there's a sidebar on entry to the action
-    'menuShow'                  => 'Y', // Whether or not this action shows up in menus or if it's hidden
+    // 'entrySidebar'              => 'Y', // Whether or not there's a sidebar on entry to the action
+    // 'menuShow'                  => 'Y', // Whether or not this action shows up in menus or if it's hidden
     'defaultPermissionAdmin'    => 'Y', // Default permission for built in role Admin
     'defaultPermissionTeacher'  => 'Y', // Default permission for built in role Teacher
     'defaultPermissionStudent'  => 'N', // Default permission for built in role Student
     'defaultPermissionParent'   => 'N', // Default permission for built in role Parent
-    'defaultPermissionSupport'  => 'Y', // Default permission for built in role Support
+    'defaultPermissionSupport'  => 'N', // Default permission for built in role Support
     'categoryPermissionStaff'   => 'Y', // Should this action be available to user roles in the Staff category?
     'categoryPermissionStudent' => 'N', // Should this action be available to user roles in the Student category?
     'categoryPermissionParent'  => 'N', // Should this action be available to user roles in the Parent category?
@@ -122,23 +134,131 @@ $actionRows[] = [
 ];
 
 $actionRows[] = [
+  'name'                      => 'Manage Requests_full',
+  'precedence'                => '1',
+  'category'                  => 'Requests',
+  'description'               => 'Manage Professional Development requests.',
+  'URLList'                   => 'requests_manage.php',
+  'entryURL'                  => 'requests_manage.php', 
+  'defaultPermissionAdmin'    => 'Y', 
+  'defaultPermissionTeacher'  => 'N', 
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'N',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N', 
+  'categoryPermissionOther'   => 'N', 
+];
+
+$actionRows[] = [
   'name'                      => 'Submit Request', // The name of the action (appears to user in the right hand side module menu)
   'precedence'                => '0',// If it is a grouped action, the precedence controls which is highest action in group
   'category'                  => 'Requests', // Optional: subgroups for the right hand side module menu
-  'description'               => 'Submit a request for Professional Development.', // Text description
-  'URLList'                   => 'requests_add.php, requests_manage.php', // List of pages included in this action
+'description'               => 'Submit a request for Professional Development.', // Text description
+  'URLList'                   => 'requests_add.php', // List of pages included in this action
   'entryURL'                  => 'requests_add.php', // The landing action for the page.
-  'entrySidebar'              => 'Y', // Whether or not there's a sidebar on entry to the action
-  'menuShow'                  => 'Y', // Whether or not this action shows up in menus or if it's hidden
+  // 'entrySidebar'              => 'Y', // Whether or not there's a sidebar on entry to the action
+  // 'menuShow'                  => 'Y', // Whether or not this action shows up in menus or if it's hidden
   'defaultPermissionAdmin'    => 'Y', // Default permission for built in role Admin
   'defaultPermissionTeacher'  => 'Y', // Default permission for built in role Teacher
   'defaultPermissionStudent'  => 'N', // Default permission for built in role Student
   'defaultPermissionParent'   => 'N', // Default permission for built in role Parent
-  'defaultPermissionSupport'  => 'Y', // Default permission for built in role Support
+  'defaultPermissionSupport'  => 'N', // Default permission for built in role Support
   'categoryPermissionStaff'   => 'Y', // Should this action be available to user roles in the Staff category?
   'categoryPermissionStudent' => 'N', // Should this action be available to user roles in the Student category?
   'categoryPermissionParent'  => 'N', // Should this action be available to user roles in the Parent category?
   'categoryPermissionOther'   => 'N', // Should this action be available to user roles in the Other category?
+];
+
+$actionRows[] = [
+  'name'                      => 'Submit Request_all',
+  'precedence'                => '1',
+  'category'                  => 'Requests',
+  'description'               => 'Submit a request for Professional Development.',
+  'URLList'                   => 'requests_add.php',
+  'entryURL'                  => 'requests_add.php', 
+  'defaultPermissionAdmin'    => 'Y', 
+  'defaultPermissionTeacher'  => 'N', 
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'N',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N', 
+  'categoryPermissionOther'   => 'N', 
+];
+
+$actionRows[] = [
+  'name'                      => 'Manage Approvers_view',
+  'precedence'                => '0',
+  'category'                  => 'Settings',
+  'description'               => 'Manage request approvers',
+  'URLList'                   => 'requests_manageApprovers.php',
+  'entryURL'                  => 'requests_manageApprovers.php', 
+  'defaultPermissionAdmin'    => 'Y', 
+  'defaultPermissionTeacher'  => 'N', 
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'N',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N', 
+  'categoryPermissionOther'   => 'N', 
+];
+
+$actionRows[] = [
+  'name'                      => 'Manage Approvers_add&edit',
+  'precedence'                => '1',
+  'category'                  => 'Settings',
+  'description'               => 'Manage request approvers',
+  'URLList'                   => 'requests_manageApprovers.php, requests_addApprover.php, requests_editApprover.php',
+  'entryURL'                  => 'requests_manageApprovers.php', 
+  'defaultPermissionAdmin'    => 'Y', 
+  'defaultPermissionTeacher'  => 'N', 
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'N',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N', 
+  'categoryPermissionOther'   => 'N', 
+];
+
+$actionRows[] = [
+  'name'                      => 'Manage Approvers_full',
+  'precedence'                => '2',
+  'category'                  => 'Settings',
+  'description'               => 'Manage request approvers',
+  'URLList'                   => 'requests_manageApprovers.php, requests_addApprover.php, requests_editApprover.php, requests_deleteApproverProcess.php',
+  'entryURL'                  => 'requests_manageApprovers.php', 
+  'defaultPermissionAdmin'    => 'Y', 
+  'defaultPermissionTeacher'  => 'N', 
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'N',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N', 
+  'categoryPermissionOther'   => 'N', 
+];
+
+$actionRows[] = [
+  'name'                      => 'Manage Request Settings',
+  'precedence'                => '0',
+  'category'                  => 'Settings',
+  'description'               => 'Manage Request Settings',
+  'URLList'                   => 'requests_manageSettings.php',
+  'entryURL'                  => 'requests_manageSettings.php', 
+  'defaultPermissionAdmin'    => 'Y', 
+  'defaultPermissionTeacher'  => 'N', 
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'N',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N', 
+  'categoryPermissionOther'   => 'N', 
 ];
 
 

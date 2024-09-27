@@ -109,7 +109,7 @@ function needsApproval(ContainerInterface $container, $gibbonPersonID, $professi
             $approval = $requestLogGateway->selectBy([
                 'professionalDevelopmentRequestID' => $pdRequest['professionalDevelopmentRequestID'],
                 'gibbonPersonID' => $gibbonPersonID,
-                'requestus' => 'Approval - Partial'
+                'requestStatus' => 'Approval - Partial'
             ]);
 
             if ($approval->isNotEmpty()) {
@@ -141,6 +141,18 @@ function formatExpandableSection($title, $content) {
     $output .= nl2brr($content);
 
     return $output;
+}
+
+function requestCommentNotifications($professionalDevelopmentRequestID, $gibbonPersonID, $personName, $requestLogGateway, $request, $comment, $notificationSender) {
+    $text = __('{person} has commented on a PD request: {request}', ['person' => $personName, 'request' => $request['eventTitle']]).'<br/><br/><b>'.__('Comment').':</b><br/>'.$comment;
+    $notificationURL = '/index.php?q=/modules/Professional Development/requests_view.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID;
+
+    $people = $requestLogGateway->selectLoggedPeople($professionalDevelopmentRequestID);
+    while ($row = $people->fetch()) {
+        //Skip current user
+        if ($row['gibbonPersonID'] == $gibbonPersonID) continue;
+        $notificationSender->addNotification($row['gibbonPersonID'], $text, 'Professional Development', $notificationURL);
+    }
 }
 
 //Get the PD request details from the DB and put into the form
@@ -264,7 +276,6 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
             $col->addLabel('notes', Format::bold(__('Comments/Notes')));
             $col->addContent($pdRequest['notes']);
 
-
     $row = $form->addRow();
         $row->addHeading(__('Date'));
         toggleSection($row, 'dateTime', $on);
@@ -381,7 +392,7 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
 
     if ($approveMode) {
         $row = $form->addRow();
-            $row->addLabel('requestStatus', __('Request Status'));
+            $row->addLabel('action', __('Action'));
             $row->addSelect('requestStatus')
                 ->fromArray(['Approval', 'Rejection', 'Comment']);
     }
@@ -416,5 +427,5 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
     </script>
     <?php
 }
-
 ?>
+

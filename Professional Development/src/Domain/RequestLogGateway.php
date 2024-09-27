@@ -45,5 +45,15 @@ class RequestLogGateway extends QueryableGateway
         return $this->runQuery($query, $criteria);
     }
 
+    public function selectLoggedPeople($professionalDevelopmentRequestID) {
+        $query = $this->newSelect()
+            ->from($this->getTableName())
+            ->cols(['gibbonPersonID'])
+            ->distinct()
+            ->where('professionalDevelopmentRequestID = :professionalDevelopmentRequestID')
+            ->bindValue('professionalDevelopmentRequestID', $professionalDevelopmentRequestID);
+
+        return $this->runSelect($query);
+    }
 
 }
