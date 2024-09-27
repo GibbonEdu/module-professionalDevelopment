@@ -32,9 +32,9 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestPersonGateway;
 require_once '../../gibbon.php';
 require_once  './moduleFunctions.php';
 
-$_POST = $container->get(Validator::class)->sanitize($_POST, ['description' => 'HTML']);
+//$_POST = $container->get(Validator::class)->sanitize($_POST, ['description' => 'HTML']);
 
-$URL = $session->get('absoluteURL') . '/index.php?q=/modules/Professional Development/requests_add.php';
+$URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module');
 
 //Checking if editing mode should be enabled
 $edit = false;
@@ -97,7 +97,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         'schoolSharing'         => true,
         'supportingEvidence'    => false,
         'notes'                 => false,
-    ];
+    ];   
 
     foreach ($requestData as $key => $required) {
         if (!empty($_POST[$key])) {
@@ -108,10 +108,25 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         }
     }
 
+    // Move attached file, if there is one
+    if (!empty($_FILES['supportingEvidenceFile']['tmp_name'])) {
+        $fileUploader = new Gibbon\FileUploader($pdo, $session);
+
+        $file = $_FILES['supportingEvidenceFile'] ?? null;
+
+        // Upload the file, return the /uploads relative path
+        $requestData['supportingEvidence'] = $fileUploader->uploadFromPost($file, $requestData['eventTitle']);
+
+        if (empty($requestData['supportingEvidence'])) {
+            $partialFail = true;
+        }
+    } else {
+        $requestData['supportingEvidence'] = $_POST['supportingEvidence'] ?? '';
+    }
+
     if ($mode != 'edit') {
         $requestData['gibbonPersonIDCreated'] = $gibbonPersonID;
         $requestData['gibbonSchoolYearID'] = $gibbonSchoolYearID;
-        $requestData['timestampCreated'] = date('Y-m-d H:i:s');
     }
 
     if ($saveMode == 'Draft' && (empty($pdRequest) || $isDraft)) {
@@ -220,7 +235,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             'professionalDevelopmentRequestID' => $professionalDevelopmentRequestID,
             'gibbonPersonID'       => $gibbonPersonID,
             'comment'              => $_POST['changeSummary'] ?? '',
-            'action'               => $edit && !$isDraft ? 'Edit' : 'Request'
+            'requestStatus'               => $edit && !$isDraft ? 'Edit' : 'Request'
         ]);
     }
 

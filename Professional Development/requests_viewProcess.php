@@ -1,4 +1,6 @@
 <?php
+
+use Gibbon\Services\Format;
 /*
 Gibbon, Flexible & Open School System
 Copyright (C) 2010, Ross Parker
@@ -17,27 +19,83 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Comms\NotificationSender;
+use Gibbon\Domain\System\NotificationGateway;
+use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
+use Gibbon\Module\ProfessionalDevelopment\Domain\RequestLogGateway;
+
 include '../../gibbon.php';
 include './moduleFunctions.php';
 
-$URL = $gibbon->session->get('absoluteURL') . '/index.php?q=/modules/' . $gibbon->session->get('module') . '/name.php';
+$moduleName = $session->get('module');
 
-if (!isActionAccessible($guid, $connection2, '/modules/Module Name/name_edit.php')) {
+$URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName;
+
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_manage.php')) {
     // Access denied
-    $URL = $URL.'&return=error0';
+    $URL .= '/requests_manage.php&return=error0';
     header("Location: {$URL}");
+    exit();
 } else {
-    // Proceed!
-    $thing = $_POST['thing']; // The variables you will be processing
+    $professionalDevelopmentRequestID = $_POST['professionalDevelopmentRequestID'] ?? '';
 
-    // Check that your required variables are present
-    if ($name == '') { 
-        $URL = $URL.'&return=error3';
+    $requestsGateway = $container->get(RequestsGateway::class);
+
+    if (empty($professionalDevelopmentRequestID) || !$requestsGateway->exists($professionalDevelopmentRequestID)) {
+        $URL .= '/requests_manage.php&return=error1';
         header("Location: {$URL}");
-        exit;
+        exit();
     }
 
-    // Your SQL or Gateway alter query
-    $URL .= "&return=success0&editID=$AI";
-    header("Location: {$URL}");
+    $pdRequest = $requestsGateway->getByID($professionalDevelopmentRequestID);
+    $gibbonPersonID = $session->get('gibbonPersonID');
+    $personName = Format::name('', $session->get('preferredName'), $session->get('surname'), 'Staff', false, true);
+
+    $highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/requests_manage.php', $connection2);
+    $readOnly = $highestAction == 'Manage Requests_view';
+
+    if (hasAccess($container, $professionalDevelopmentRequestID, $gibbonPersonID, $highestAction) && !$readOnly) {
+        $URL .= '/requests_view.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID;
+
+        $comment = $_POST['comment'] ?? '';
+
+        if (empty($comment)) {
+            $URL .= '&return=error1';
+            header("Location: {$URL}");
+            exit();
+        }
+
+        $requestLogGateway = $container->get(RequestLogGateway::class);
+
+        $professionalDevelopmentRequestLogID = $requestLogGateway->insert([
+            'professionalDevelopmentRequestID'  => $professionalDevelopmentRequestID,
+            'gibbonPersonID'        => $gibbonPersonID,
+            'requestStatus'         => 'Comment',
+            'comment'               => $comment
+        ]);
+
+        if (!$professionalDevelopmentRequestID) {
+            $URL .= '&return=error2';
+            header("Location: {$URL}");
+            exit();
+        }
+
+    //$notificationGateway = $container->get(NotificationGateway::class);
+    //$notificationSender = new NotificationSender($notificationGateway, $session);
+
+    //tripCommentNotifications($tripPlannerRequestID, $gibbonPersonID, $personName, $tripLogGateway, $trip, $comment, $notificationSender);
+
+    //$notificationSender->sendNotifications();
+
+        $URL .= '&return=success0';
+        header("Location: {$URL}");
+        exit();
+    
+    } else {
+        $URL .= '/requests_manage.php&return=error0';
+        header("Location: {$URL}");
+        exit();
+    }
 }
+
+?>
