@@ -4,10 +4,9 @@ namespace Gibbon\Module\ProfessionalDevelopment\Domain;
 use Gibbon\Domain\QueryCriteria;
 use Gibbon\Domain\QueryableGateway;
 use Gibbon\Domain\Traits\TableAware;
-use Gibbon\Module\ProfessionalDevelopment\Domain\Traits\BulkInsert;
 
 /**
- * PD Requests Gateway
+ * PD Request Cost Gateway
  *
  * @version v28
  * @since   v28
@@ -15,10 +14,9 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\Traits\BulkInsert;
 class RequestCostGateway extends QueryableGateway 
 {
     use TableAware;
-    use BulkInsert;
 
     private static $tableName = 'professionalDevelopmentRequestCost'; 
-    private static $primaryKey = 'professionalDevelopmentRequesCostID'; //The primaryKey of said table
+    private static $primaryKey = 'professionalDevelopmentRequestCostID';
     private static $searchableColumns = [];
 
     public function queryRequestCost(QueryCriteria $criteria) {
@@ -36,5 +34,15 @@ class RequestCostGateway extends QueryableGateway
         ]);
 
         return $this->runQuery($query, $criteria);
+    }
+
+    public function deleteCostsNotInList($professionalDevelopmentRequestID, $costIDList)
+    {
+        $costIDList = is_array($costIDList) ? implode(',', $costIDList) : $costIDList;
+
+        $data = ['professionalDevelopmentRequestID' => $professionalDevelopmentRequestID, 'costIDList' => $costIDList];
+        $sql = "DELETE FROM professionalDevelopmentRequestCost WHERE professionalDevelopmentRequestID=:professionalDevelopmentRequestID AND NOT FIND_IN_SET(professionalDevelopmentRequestCostID, :costIDList)";
+
+        return $this->db()->delete($sql, $data);
     }
 }

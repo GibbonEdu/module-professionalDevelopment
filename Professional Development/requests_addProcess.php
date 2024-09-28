@@ -136,69 +136,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $requestData['status'] = 'Requested';
     }
 
-    //Load Trip People
-    $tripPeople = [];
-
-    $teachers = $_POST['teachers'] ?? [];
-    foreach ($teachers as $person) {
-        $tripPeople[] = ['gibbonPersonID' => $person];
-    }
-
-    if (empty($tripPeople)) {
-        $partialFail = true;
-        $returnCode = 'warning6';
-    }
-
-    //Load Trip Days
-    $tripDays = [];
-
-    $dateFormat = 'd/m/Y';
-
-    $dateTimeOrder = $_POST['dateTimeOrder'] ?? [];
-    foreach ($dateTimeOrder as $order) {
-        $day = $_POST['dateTime'][$order];
-
-        $startDate = Format::createDateTime($day['startDate'], $dateFormat);
-        $endDate = Format::createDateTime($day['endDate'], $dateFormat);
-
-        if (!$startDate || !$endDate) {
-            $partialFail = true;
-            $returnCode = 'warning7';
-            continue;
-        } 
-
-        $day['startDate'] = $startDate->format('Y-m-d');
-        $day['endDate'] = $endDate->format('Y-m-d');
-
-        $tripDays[] = $day;
-    }
-
-    //If no days have been added, throw an error.
-    if (empty($tripDays)) {
-        $partialFail = true;
-        $returnCode = 'warning4';
-    }
-
-    //Load Trip Costs
-    $tripCosts = [];
-
-    $costOrder = $_POST['costOrder'] ?? [];
-    foreach ($costOrder as $order) {
-        $cost = $_POST['cost'][$order];
-
-        if (empty($cost['title']) || empty($cost['cost']) || $cost['cost'] < 0) {
-            $partialFail = true;
-            $returnCode = 'warning5';
-        }
-
-        $tripCosts[] = $cost;
-    }
-
     //Begin Transaction
     $requestsGateway->beginTransaction();
 
-    //Insert Request Data
-
+    //Insert Request Data without the date, cost and people
     if ($edit) {
         if (!$requestsGateway->update($professionalDevelopmentRequestID, $requestData)) {
             $professionalDevelopmentRequestID = null;
@@ -214,23 +155,109 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         header("Location: {$URL}");
         exit;
     }
-    
-    //Insert new Request Days data and remove old data (if exists).
+
+    //Add or edit Request Days
     $requestDaysGateway = $container->get(RequestDaysGateway::class);
-    $requestDaysGateway->deleteWhere(['professionalDevelopmentRequestID' => $professionalDevelopmentRequestID]);
-    $requestDaysGateway->bulkInsert($professionalDevelopmentRequestID, $tripDays);
 
-    //Insert new Request Cost data and remove old data (if exists).
+    $dateIDs = [];
+    $dateTimeOrder = $_POST['dateTimeOrder'] ?? [];
+
+    foreach ($dateTimeOrder as $order) {
+        $day = $_POST['dateTime'][$order];
+
+        if (!$day['startDate'] || !$day['endDate']) {
+            $partialFail = true;
+            $returnCode = 'warning7';
+            continue;
+        }
+
+        $data = [
+            'professionalDevelopmentRequestID' => $professionalDevelopmentRequestID,
+            'startDate' => Format::dateConvert($day['startDate']) ?? '',
+            'endDate'   => Format::dateConvert($day['endDate']) ?? '',
+        ];
+
+        $professionalDevelopmentRequestDaysID = $day['professionalDevelopmentRequestDaysID'] ?? '';
+
+        if (!empty($professionalDevelopmentRequestDaysID)) {
+            $partialFail &= !$requestDaysGateway->update($professionalDevelopmentRequestDaysID, $data);
+        } else {
+            $professionalDevelopmentRequestDaysID = $requestDaysGateway->insert($data);
+            $partialFail &= !$professionalDevelopmentRequestDaysID;
+        }
+
+        $dateIDs[] = str_pad($professionalDevelopmentRequestDaysID, 10, '0', STR_PAD_LEFT);
+    }
+
+    //Cleanup dates that have been deleted
+    $requestDaysGateway->deleteDatesNotInList($professionalDevelopmentRequestID, $dateIDs);
+
+    //Add or edit Request Cost
     $requestCostGateway = $container->get(RequestCostGateway::class);
-    $requestCostGateway->deleteWhere(['professionalDevelopmentRequestID' => $professionalDevelopmentRequestID]);
-    $requestCostGateway->bulkInsert($professionalDevelopmentRequestID, $tripCosts);
 
-     //Insert new Request Person data and remove old data (if exists).
-     $requestPersonGateway = $container->get(RequestPersonGateway::class);
-     $requestPersonGateway->deleteWhere(['professionalDevelopmentRequestID' => $professionalDevelopmentRequestID]);
-     $requestPersonGateway->bulkInsert($professionalDevelopmentRequestID, $tripPeople);
+    $costIDs = [];
+    $costOrder = $_POST['costOrder'] ?? [];
 
-     if ($saveMode != 'Draft') {
+    foreach ($costOrder as $order) {
+        $cost = $_POST['cost'][$order];
+ 
+        if (empty($cost['title']) || empty($cost['cost']) || $cost['cost'] < 0) {
+            $partialFail = true;
+            $returnCode = 'warning5';
+        }
+
+        $data = [
+            'professionalDevelopmentRequestID' => $professionalDevelopmentRequestID,
+            'title'                            => $cost['title'] ?? '',
+            'description'                      => $cost['description']  ?? '',
+            'cost'                             => $cost['cost']  ?? ''
+        ];
+
+        $professionalDevelopmentRequestCostID = $cost['professionalDevelopmentRequestCostID'] ?? '';
+
+        if (!empty($professionalDevelopmentRequestCostID)) {
+            $partialFail &= !$requestCostGateway->update($professionalDevelopmentRequestCostID, $data);
+        } else {
+        $professionalDevelopmentRequestCostID = $requestCostGateway->insert($data);
+        $partialFail &= !$professionalDevelopmentRequestCostID;
+        }
+
+        $costIDs[] = str_pad($professionalDevelopmentRequestCostID, 10, '0', STR_PAD_LEFT);
+    }
+
+    //Cleanup cost records that have been deleted
+    $requestCostGateway->deleteCostsNotInList($professionalDevelopmentRequestID, $costIDs);
+
+    //Load Trip People
+    $requestPersonGateway = $container->get(RequestPersonGateway::class);
+
+    $personIDs = [];
+    $participantOrder = $_POST['participantOrder'] ?? [];
+
+    foreach ($participantOrder as $order) {
+        $participant = $_POST['participant'][$order];
+
+        $data = [
+            'professionalDevelopmentRequestID' => $professionalDevelopmentRequestID,
+            'gibbonPersonID' => $participant['gibbonPersonID'] ?? ''
+        ];
+
+        $professionalDevelopmentRequestPersonID = $participant['professionalDevelopmentRequestPersonID'] ?? '';
+
+        if (!empty($professionalDevelopmentRequestPersonID)) {
+            $partialFail &= !$requestPersonGateway->update($professionalDevelopmentRequestPersonID, $data);
+        } else {
+        $professionalDevelopmentRequestPersonID = $requestPersonGateway->insert($data);
+        $partialFail &= !$professionalDevelopmentRequestCostID;
+        }
+
+        $personIDs[] = str_pad($professionalDevelopmentRequestPersonID, 10, '0', STR_PAD_LEFT);
+    }
+
+     //Cleanup participant records that have been deleted
+     $requestPersonGateway->deleteParticipantsNotInList($professionalDevelopmentRequestID, $personIDs);
+
+    if ($saveMode != 'Draft') {
         $requestLogGateway = $container->get(RequestLogGateway::class);
         $requestLogGateway->insert([
             'professionalDevelopmentRequestID' => $professionalDevelopmentRequestID,
@@ -276,7 +303,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
         $notificationSender->sendNotifications();
     }
-
 
     if ($partialFail) {
         $URL .= '&return='.$returnCode.'&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID . ($edit ? '&mode=edit' : '');
