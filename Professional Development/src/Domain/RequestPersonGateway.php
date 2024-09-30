@@ -4,8 +4,6 @@ namespace Gibbon\Module\ProfessionalDevelopment\Domain;
 use Gibbon\Domain\QueryCriteria;
 use Gibbon\Domain\QueryableGateway;
 use Gibbon\Domain\Traits\TableAware;
-use Gibbon\Module\ProfessionalDevelopment\Domain\Traits\BulkInsert;
-
 
 /**
  * PD Requests Gateway
@@ -16,7 +14,6 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\Traits\BulkInsert;
 class RequestPersonGateway extends QueryableGateway 
 {
     use TableAware;
-    use BulkInsert;
 
     private static $tableName = 'professionalDevelopmentRequestPerson'; 
     private static $primaryKey = 'professionalDevelopmentRequestPersonID'; //The primaryKey of said table
@@ -27,7 +24,7 @@ class RequestPersonGateway extends QueryableGateway
         ->from($this->getTableName())
         ->innerJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID = professionalDevelopmentRequestPerson.gibbonPersonID')
         ->cols([
-            'gibbonPerson.gibbonPersonID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname', 'gibbonPerson.image_240',
+            'gibbonPerson.gibbonPersonID', 'professionalDevelopmentRequestPerson.professionalDevelopmentRequestPersonID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname', 'gibbonPerson.image_240',
             'professionalDevelopmentRequestPerson.professionalDevelopmentRequestID'
         ]);
 
@@ -48,6 +45,16 @@ class RequestPersonGateway extends QueryableGateway
         ]);
 
         return $result->isNotEmpty();
+    }
+
+    public function deleteParticipantsNotInList($professionalDevelopmentRequestID, $participantIDList)
+    {
+        $participantIDList = is_array($participantIDList) ? implode(',', $participantIDList) : $participantIDList;
+        
+        $data = ['professionalDevelopmentRequestID' => $professionalDevelopmentRequestID, 'participantIDList' => $participantIDList];
+        $sql = "DELETE FROM professionalDevelopmentRequestPerson WHERE professionalDevelopmentRequestID=:professionalDevelopmentRequestID AND NOT FIND_IN_SET(professionalDevelopmentRequestPersonID, :participantIDList)";
+
+        return $this->db()->delete($sql, $data);
     }
 
 }

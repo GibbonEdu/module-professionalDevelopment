@@ -82,28 +82,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
       $page->return->setEditLink($session->get('absoluteURL').'/index.php?q=/modules/Professional Development/requests_view.php&professionalDevelopmentRequestID='.$professionalDevelopmentRequestID);
    }
 
-   //PD trip People Data
-   $tripPeople = [];
-
-   if ($edit) {
-    $requestPersonGateway = $container->get(RequestPersonGateway::class);
-    $requestPersonCriteria = $requestPersonGateway->newQueryCriteria()
-        ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID);
-
-    $tripPeople = $requestPersonGateway->queryRequestPeople($requestPersonCriteria)->getColumn('gibbonPersonID');
-}
-
-    //Staff/Teacher Data for Multi-Select
-    $staffGateway = $container->get(StaffGateway::class);
-    $staffCriteria = $staffGateway->newQueryCriteria()
-        ->sortBy(['surname', 'preferredName']);
-
-    $teachers = array_reduce($staffGateway->queryAllStaff($staffCriteria)->toArray(), function ($array, $staff) use ($tripPeople) {
-        $list = in_array($staff['gibbonPersonID'], $tripPeople) ? 'destination' : 'source';
-        $array[$list][$staff['gibbonPersonID']] = Format::name($staff['title'], $staff['preferredName'], $staff['surname'], 'Staff', true, true);
-        return $array;
-    });
-
    //Submit Request Form
    $form = Form::create('requestForm', $session->get('absoluteURL').'/modules/'.$moduleName.'/requests_addProcess.php');
 
@@ -207,7 +185,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                 $row->addLabel('endDate', __('End Date'));
                 $row->addDate('endDate')
                     ->isRequired()
-                    ->placeholder('End Date');
+                    ->placeholder('End Date')
+                    ->append("<input type='hidden' id='professionalDevelopmentRequestDaysID' name='professionalDevelopmentRequestDaysID' value=''/>");
 
         $dateTimeBlock->addRow()->addClass('h-2');
 
@@ -241,7 +220,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             $row->addCurrency('cost')
                 ->isRequired()
                 ->addClass('floatNone')
-                ->minimum(0);
+                ->minimum(0)
+                ->append("<input type='hidden' id='professionalDevelopmentRequestCostID' name='professionalDevelopmentRequestCostID' value=''/>");
 
         $row = $costBlock->addRow()->addClass('showHide w-full');
             $col = $row->addColumn();
@@ -250,13 +230,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                     ->setClass('fullWidth floatNone')
                     ->placeholder(__('Cost Description'));
       
-    
         //Tool Button
         $addCostBlockButton = $form->getFactory()
             ->createButton(__("Add Cost"))
             ->addClass('addBlock');
     
-        //Custom Blocks
+        //Custom Blocks for Cost
         $row = $form->addRow();
             $costBlocks = $row->addCustomBlocks("cost", $session)
                 ->fromTemplate($costBlock)
@@ -267,20 +246,32 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                 ])
                 ->addBlockButton('showHide', 'Show/Hide', 'plus.png')
                 ->addToolInput($addCostBlockButton);
-
+    
     //Participants section
     $row = $form->addRow();
         $row->addHeading(__('Participants'));
 
+    //Template for participant Blocks
+    $participantBlock = $form->getFactory()->createTable()->setClass('blank');
+    $row = $participantBlock->addRow()->addClass('w-full flex justify-between items-center mt-1 ml-2');
+    $row->addSelectStaff('gibbonPersonID')->photo(false)
+            ->setClass('flex-1 mr-1')->required()
+            ->placeholder()
+            ->append("<input type='hidden' id='professionalDevelopmentRequestPersonID' name='professionalDevelopmentRequestPersonID' value=''/>");
+    
+    //Tool Button
+    $addParticipantBlockButton = $form->getFactory()->createButton(__('Add Participant'))->addClass('addBlock');
+
+    //Custom Blocks for participants
     $row = $form->addRow();
-        $col = $row->addColumn();
-            $col->addLabel('teachers', __('Teachers/Staff'));
-
-            $multiSelect = $col->addMultiSelect('teachers')
-                ->isRequired();
-
-            $multiSelect->source()->fromArray($teachers['source'] ?? []);
-            $multiSelect->destination()->fromArray($teachers['destination'] ?? []);
+        $participantBlocks = $row->addCustomBlocks('participant', $session)
+        ->fromTemplate($participantBlock)
+        ->settings([
+            'placeholder' => __('Participants will appear here...'),
+            'sortable' => true,
+            'orderName' => 'participantOrder'
+            ])
+        ->addToolInput($addParticipantBlockButton);
 
     if ($edit) {
         //Add parameters for editing
@@ -305,10 +296,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
          $costs = $requestCostGateway->queryRequestCost($costCriteria);
 
          foreach ($costs as $cost) {
-             $costBlocks->addBlock($cost['professionalDevelopmentRequestCostID'], $cost);
+             $costBlocks->addBlock($cost['professionalDevelopmentRequestCostID'], [
+                'title'       => $cost['title'],
+                'description' => $cost['description'],
+                'cost'        => $cost['cost'],
+                'professionalDevelopmentRequestCostID' => $cost['professionalDevelopmentRequestCostID']
+            ]);
          }
 
-         //Get Date Data and add to DateBlocks
+         //Get Days Data and add to DateBlocks
         $requestDaysGateway = $container->get(RequestDaysGateway::class);
         $daysCriteria = $requestDaysGateway->newQueryCriteria()
             ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
@@ -316,12 +312,28 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
         $days = $requestDaysGateway->queryRequestDays($daysCriteria);
 
-        foreach ($days as $day) {
-            $day['startDate'] = Format::date($day['startDate']);
-            $day['endDate'] = Format::date($day['endDate']);
-            
-            $dateBlocks->addBlock($day['professionalDevelopmentRequestDaysID'], $day);
+        foreach ($days as $day) {            
+            $dateBlocks->addBlock($day['professionalDevelopmentRequestDaysID'], [
+            'startDate' => Format::date($day['startDate']),
+            'endDate'   => Format::date($day['endDate']),
+            'professionalDevelopmentRequestDaysID' => $day['professionalDevelopmentRequestDaysID']
+            ]);
         }
+        
+        //Get People Data and add to DataBlocks
+        $requestPersonGateway = $container->get(RequestPersonGateway::class);
+        $requestPersonCriteria = $requestPersonGateway->newQueryCriteria()
+        ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID);
+
+        $tripPeople = $requestPersonGateway->queryRequestPeople($requestPersonCriteria);
+
+        foreach ($tripPeople as $person) {  
+            $participantBlocks->addBlock($person['professionalDevelopmentRequestPersonID'], [
+                'gibbonPersonID' => $person['gibbonPersonID'],
+                'professionalDevelopmentRequestPersonID' => $person['professionalDevelopmentRequestPersonID']
+                ]);
+        }
+
     }
 
     if ($edit && !$isDraft) {
