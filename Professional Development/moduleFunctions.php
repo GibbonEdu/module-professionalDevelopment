@@ -26,6 +26,8 @@ use Gibbon\Tables\View\GridView;
 use Psr\Container\ContainerInterface;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Departments\DepartmentGateway;
+use Gibbon\Module\ProfessionalDevelopment\Data\SettingFactory;
+use Gibbon\Module\ProfessionalDevelopment\Data\Setting;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestLogGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestCostGateway;
@@ -427,5 +429,60 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
     </script>
     <?php
 }
+
+function getSettings(ContainerInterface $container, $guid) {
+ 
+    $requestsGateway = $container->get(RequestsGateway::class);
+
+    $requestApprovalOptions = ['One Of', 'Two Of', 'Chain Of All'];
+
+    $settingFactory = new SettingFactory();
+
+    $settingFactory->addSetting('requestApprovalType')
+        ->setRenderer(function ($data, $row) use ($requestApprovalOptions) {
+            $row->addSelect($data['name'])
+                ->fromArray($requestApprovalOptions)
+                ->selected($data['value'])
+                ->setRequired(true);
+        })
+        ->setProcessor(function ($data) use ($requestApprovalOptions) {
+            return in_array($data, $requestApprovalOptions) ? $data : false;
+        });
+
+    $settingFactory->addSetting('headApproval')
+        ->setRenderer(function ($data, $row) {
+            $row->addCheckBox($data['name'])
+                ->checked(boolval($data['value']));
+        })
+        ->setProcessor(function ($data) use ($requestsGateway) {
+            $enabled = $data !== null;
+
+            if (!$enabled) {
+
+                $success = $requestsGateway->updateWhere(
+                    ['status' => 'Awaiting Final Approval'],
+                    ['status' => 'Approved']
+                );
+
+                if (!$success) {
+                    return false;
+                }
+            }
+
+            return $enabled ? 1 : 0;
+        });
+
+    $settingFactory->addSetting('expiredUnapprovedFilter')
+        ->setRenderer(function ($data, $row) {
+            $row->addCheckBox($data['name'])
+                ->checked(boolval($data['value']));
+        })
+        ->setProcessor(function ($data) {
+            return $data === null ? 0 : 1;
+        });
+
+    return $settingFactory->getSettings();
+}
+
 ?>
 

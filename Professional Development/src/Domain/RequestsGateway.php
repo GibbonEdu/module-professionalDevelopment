@@ -19,7 +19,6 @@ class RequestsGateway extends QueryableGateway
     private static $primaryKey = 'professionalDevelopmentRequestID';
     private static $searchableColumns = [];
 
-
     public function queryRequests(QueryCriteria $criteria, $gibbonSchoolYearID, $gibbonPersonID = null, $gibbonDepartmentID = null, $expiredUnapproved = null) {
         
         $query = $this

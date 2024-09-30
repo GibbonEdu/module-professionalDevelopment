@@ -152,23 +152,21 @@ $actionRows[] = [
 ];
 
 $actionRows[] = [
-  'name'                      => 'Submit Request', // The name of the action (appears to user in the right hand side module menu)
-  'precedence'                => '0',// If it is a grouped action, the precedence controls which is highest action in group
-  'category'                  => 'Requests', // Optional: subgroups for the right hand side module menu
-'description'               => 'Submit a request for Professional Development.', // Text description
-  'URLList'                   => 'requests_add.php', // List of pages included in this action
-  'entryURL'                  => 'requests_add.php', // The landing action for the page.
-  // 'entrySidebar'              => 'Y', // Whether or not there's a sidebar on entry to the action
-  // 'menuShow'                  => 'Y', // Whether or not this action shows up in menus or if it's hidden
-  'defaultPermissionAdmin'    => 'Y', // Default permission for built in role Admin
-  'defaultPermissionTeacher'  => 'Y', // Default permission for built in role Teacher
-  'defaultPermissionStudent'  => 'N', // Default permission for built in role Student
-  'defaultPermissionParent'   => 'N', // Default permission for built in role Parent
-  'defaultPermissionSupport'  => 'N', // Default permission for built in role Support
-  'categoryPermissionStaff'   => 'Y', // Should this action be available to user roles in the Staff category?
-  'categoryPermissionStudent' => 'N', // Should this action be available to user roles in the Student category?
-  'categoryPermissionParent'  => 'N', // Should this action be available to user roles in the Parent category?
-  'categoryPermissionOther'   => 'N', // Should this action be available to user roles in the Other category?
+  'name'                      => 'Submit Request', 
+  'precedence'                => '0',
+  'category'                  => 'Requests', 
+'description'               => 'Submit a request for Professional Development.',
+  'URLList'                   => 'requests_add.php',
+  'entryURL'                  => 'requests_add.php',
+  'defaultPermissionAdmin'    => 'Y',
+  'defaultPermissionTeacher'  => 'Y',
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'N',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N',
+  'categoryPermissionOther'   => 'N',
 ];
 
 $actionRows[] = [
@@ -261,7 +259,41 @@ $actionRows[] = [
   'categoryPermissionOther'   => 'N', 
 ];
 
+$actionRows[] = [
+  'name'                      => 'Archived Request',
+  'precedence'                => '0',
+  'category'                  => 'Requests',
+  'description'               => 'Gives users read-only access to past requests.',
+  'URLList'                   => 'requests_archive.php, requests_archiveView.php',
+  'entryURL'                  => 'requests_archive.php', 
+  'defaultPermissionAdmin'    => 'Y', 
+  'defaultPermissionTeacher'  => 'N', 
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'N',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N', 
+  'categoryPermissionOther'   => 'N', 
+];
 
+$actionRows[] = [
+  'name'                      => "Today's Trips",
+  'precedence'                => '0',
+  'category'                  => 'Reports',
+  'description'               => 'Displays PD Requests scheduled for today with the status requested, approved or awaiting final approval',
+  'URLList'                   => 'requests_reportToday.php',
+  'entryURL'                  => 'requests_reportToday.php', 
+  'defaultPermissionAdmin'    => 'Y', 
+  'defaultPermissionTeacher'  => 'N', 
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'N',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N', 
+  'categoryPermissionOther'   => 'N', 
+];
 
 // Hooks
 //$hooks[] = ''; // Serialised array to create hook and set options. See Hooks documentation online.
