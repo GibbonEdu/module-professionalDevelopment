@@ -325,8 +325,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
         foreach ($days as $day) {            
             $dateBlocks->addBlock($day['professionalDevelopmentRequestDaysID'], [
-            'startDate' => Format::date($day['startDate']),
-            'endDate'   => Format::date($day['endDate']),
+            'startDate' =>$day['startDate'],
+            'endDate'   => $day['endDate'],
             'professionalDevelopmentRequestDaysID' => $day['professionalDevelopmentRequestDaysID']
             ]);
         }
@@ -351,7 +351,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $form->addRow()->addHeading(__('Log'));
         $col = $form->addRow()->addColumn();
             $col->addLabel('changeSummary', __('Change Summary'))->description(__('Please briefly describe the changes you have made to this request. This summary will be added to the request log.'));
-            $col->addTextarea('changeSummary')->setRows(2)->required();
+            $col->addTextarea('changeSummary')->required()->setRows(2);
     }
 
     $form->addRow()->addHeading('Agreement', __('PLEASE READ'));
@@ -378,18 +378,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     //This javascript is for the Date Blocks
     var date = 'input[id*="Date"]';
 
-    $(document).on('click', '.addBlock', function () {
-        $(date).removeClass('hasDatepicker').datepicker({'timeFormat': 'H:i', onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
-    });
-
     $(document).ready(function(){
-        $(date).removeClass('hasDatepicker').datepicker({onSelect: function(){$(this).blur();}, onClose: function(){$(this).change();} });
-
+        
         //Ensure that loaded dates have correct max and min dates.
         $('input[id^=startDate]').each(function() {
             var endDate = $('#' + $(this).prop('id').replace('start', 'end'));
         });
-
     });
 
     $(document).on('change', 'input[id^=startDate]', function() {

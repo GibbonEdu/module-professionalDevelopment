@@ -178,8 +178,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
         $data = [
             'professionalDevelopmentRequestID' => $professionalDevelopmentRequestID,
-            'startDate' => Format::dateConvert($day['startDate']) ?? '',
-            'endDate'   => Format::dateConvert($day['endDate']) ?? '',
+            'startDate' => $day['startDate'] ?? '',
+            'endDate'   => $day['endDate'] ?? '',
         ];
 
         $professionalDevelopmentRequestDaysID = $day['professionalDevelopmentRequestDaysID'] ?? '';
