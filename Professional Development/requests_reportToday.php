@@ -34,7 +34,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 } else {
     $moduleName = $session->get('module');
   
-    $date = !empty($_GET['date'])? $_GET['date'] : Format::date(date('Y-m-d'));
+    $date = !empty($_GET['date']) ? $_GET['date'] : date('Y-m-d');
 
     // FILTER
     $form = Form::create('filter', $session->get('absoluteURL').'/index.php', 'get');
@@ -78,7 +78,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             return $output;
         });
   
-    $table->addColumn('tripTitle', __('Title'));
+    $table->addColumn('eventTitle', __('Title'));
     
     $table->addColumn('owner', __('Owner'))
         ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]))
