@@ -1,7 +1,9 @@
 <?php
 /*
-Gibbon, Flexible & Open School System
-Copyright (C) 2010, Ross Parker
+Gibbon: the flexible, open school platform
+Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
+Copyright © 2010, Gibbon Foundation
+Gibbon™, Gibbon Education Ltd. (Hong Kong)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,10 +19,8 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Http\Url;
 use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
-use Gibbon\Domain\Staff\StaffGateway;
 use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
@@ -101,7 +101,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $row = $form->addRow();
         $row->addLabel('eventFocus', __('Area of Focus (conference or training)'));
-        $row->addSelect('eventFocus')->fromArray(['IB' => __('IB'), 'IGCSE' => __('IGCSE'), 'Other' => __('Other')])->required();
+        $row->addSelect('eventFocus')->fromArray(['IB' => __('IB'), 'IGCSE' => __('IGCSE'), 'SEN' => __('SEN'),'Other' => __('Other')])->required();
 
     $form->toggleVisibilityByClass('eventFocus')->onSelect('eventFocus')->when('Other');
     $row = $form->addRow()->addClass('eventFocus');
@@ -115,6 +115,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $row = $form->addRow();
         $row->addLabel('attendeeCount', __('No. of Particpants'))->description(__m('Total number of people joining the event'));
         $row->addNumber('attendeeCount')->onlyInteger(true)->minimum(0)->maximum(999)->maxLength(3)->required();
+
+    //Cover Amount
+    $options = getCoverAmountArray();
+    $row = $form->addRow();
+        $row->addLabel('coverAmount', __('Cover Amount'))->description(__('Cover Required: If "yes", please provide an estimate of the amount of cover required. Please tick all that apply'));
+        $row->addCheckbox('coverAmount')
+            ->fromArray($options)
+            ->addClass('md:max-w-md')
+            ->required();
 
     $row = $form->addRow();
         $row->addLabel('eventTitle', 'Event Name');
@@ -285,6 +294,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             ->displayLabel();
         
         //Load values into form
+        $pdRequest['coverAmount'] = unserialize($pdRequest['coverAmount']);
+
         $form->loadAllValuesFrom($pdRequest);
 
          //Get Cost Data and add to CostBlocks
@@ -329,9 +340,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
         foreach ($tripPeople as $person) {  
             $participantBlocks->addBlock($person['professionalDevelopmentRequestPersonID'], [
-                'gibbonPersonID' => $person['gibbonPersonID'],
-                'professionalDevelopmentRequestPersonID' => $person['professionalDevelopmentRequestPersonID']
-                ]);
+            'gibbonPersonID' => $person['gibbonPersonID'],
+            'professionalDevelopmentRequestPersonID' => $person['professionalDevelopmentRequestPersonID']
+            ]);
         }
 
     }
@@ -343,6 +354,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             $col->addTextarea('changeSummary')->setRows(2)->required();
     }
 
+    $form->addRow()->addHeading('Agreement', __('PLEASE READ'));
+    $form->addRow()->addContent("Please note that completion of this application will not always guarantee confirmation. When and if necessary, consideration will need to be given to the number of staff wishing to attend at any given time, support available to cover classes, limits to registrations available for individual schools, and perceived areas of need within the school.  Please be assured, however, that all decisions will be discussed with you in a timely fashion. *No registration or airline/hotel booking will be executed if this application is not approved by the Head of School. The application should be submitted at least 15 working days prior to the conference/workshop’s registration deadline.");
+
+    $row = $form->addRow();
+    $row->addLabel('agreement', __('I acknowledge that I understand the points above and I have discussed this application with my Head of Department.'));
+    $row->addCheckbox('agreement')->description(__('Yes'))->required();
+    
     $row = $form->addRow('stickySubmit');
     if (!$edit || $isDraft) {
         $col = $row->addColumn()->addClass('items-center');

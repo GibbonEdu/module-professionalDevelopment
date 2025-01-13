@@ -1,9 +1,9 @@
 <?php
-
-
 /*
-Gibbon, Flexible & Open School System
-Copyright (C) 2010, Ross Parker
+Gibbon: the flexible, open school platform
+Founded by Ross Parker at ICHK Secondary. Built by Ross Parker, Sandra Kuipers and the Gibbon community (https://gibbonedu.org/about/)
+Copyright © 2010, Gibbon Foundation
+Gibbon™, Gibbon Education Ltd. (Hong Kong)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ use Psr\Container\ContainerInterface;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Departments\DepartmentGateway;
 use Gibbon\Module\ProfessionalDevelopment\Data\SettingFactory;
-use Gibbon\Module\ProfessionalDevelopment\Data\Setting;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestLogGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestCostGateway;
@@ -210,42 +209,50 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
         toggleSection($row, 'basicInfo', $on);
 
     $row = $form->addRow()->addClass('basicInfo');
-        $row->addLabel('eventType', Format::bold(__('Event Type')));
+        $row->addLabel('eventTypeLabel', Format::bold(__('Event Type')));
         $row->addTextfield('eventType')
             ->readonly();
 
     $row = $form->addRow()->addClass('basicInfo');
-        $row->addLabel('eventFocus', Format::bold(__('Area of Focus')));
+        $row->addLabel('eventFocusLabel', Format::bold(__('Area of Focus')));
             $row->addTextfield('eventFocus')
                 ->readonly();
 
     $row = $form->addRow()->addClass('basicInfo');
-                $row->addLabel('attendeeRole', Format::bold(__('Participant(s) Role')));
+                $row->addLabel('attendeeRoleLabel', Format::bold(__('Participant(s) Role')));
                     $row->addTextfield('attendeeRole')
                         ->readonly();
 
     $row = $form->addRow()->addClass('basicInfo');
-                $row->addLabel('attendeeCount', Format::bold(__('No. of Particpants')));
+                $row->addLabel('attendeeCountLabel', Format::bold(__('No. of Particpants')));
                 $row->addTextfield('attendeeCount')
                         ->readonly();
 
+    $coverAmount = unserialize($pdRequest['coverAmount']);
     $row = $form->addRow()->addClass('basicInfo');
-                $row->addLabel('eventTitle', Format::bold(__('Event Name')));
+                $row->addLabel('coverAmountLabel', Format::bold(__('Cover Amount')));
+                    $row->addCheckbox('coverAmount')
+                            ->fromArray($coverAmount)
+                            ->readonly();
+                            
+                            
+    $row = $form->addRow()->addClass('basicInfo');
+                $row->addLabel('eventTitleLabel', Format::bold(__('Event Name')));
                 $row->addTextfield('eventTitle')
                     ->readonly();
 
     $row = $form->addRow()->addClass('basicInfo');
-        $row->addLabel('eventLocation', Format::bold(__('Location')));
+        $row->addLabel('eventLocationLabel', Format::bold(__('Location')));
         $row->addTextfield('eventLocation')
             ->readonly();
 
     $row = $form->addRow()->addClass('basicInfo');
         $col = $row->addColumn();
-            $col->addLabel('eventDescription', Format::bold(__('Event Description')));
+            $col->addLabel('eventDescriptionLabel', Format::bold(__('Event Description')));
             $col->addContent($pdRequest['eventDescription']);
 
     $row = $form->addRow()->addClass('basicInfo');
-        $row->addLabel('status', Format::bold(__('Status')));
+        $row->addLabel('statusLabel', Format::bold(__('Status')));
         $row->addTextfield('status')
             ->readOnly();
 
@@ -255,27 +262,27 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
 
     $row = $form->addRow()->addClass('furtherInfo');
         $col = $row->addColumn();
-            $col->addLabel('personalRational', Format::bold(__('PERSONAL RATIONAL')));
+            $col->addLabel('personalRationalLabel', Format::bold(__('PERSONAL RATIONAL')));
             $col->addContent($pdRequest['personalRational']);
 
     $row = $form->addRow()->addClass('furtherInfo');
         $col = $row->addColumn();
-            $col->addLabel('departmentImpact', Format::bold(__('DEPARTMENTAL AND SCHOOL IMPACT')));
+            $col->addLabel('departmentImpactLabel', Format::bold(__('DEPARTMENTAL AND SCHOOL IMPACT')));
             $col->addContent($pdRequest['departmentImpact']);
 
     $row = $form->addRow()->addClass('furtherInfo');
         $col = $row->addColumn();
-            $col->addLabel('schoolSharing', Format::bold(__('SCHOOL SHARING')));
+            $col->addLabel('schoolSharingLabel', Format::bold(__('SCHOOL SHARING')));
             $col->addContent($pdRequest['schoolSharing']);
 
     $row = $form->addRow()->addClass('furtherInfo');
-        $row->addLabel('supportingEvidence', __m('Supporting Evidence (If applicable)'))->description(__m('Please upload any supporting evidence that you think might be useful in assessing your application'));
+        $row->addLabel('supportingEvidenceLabel', __m('Supporting Evidence (If applicable)'))->description(__m('Please upload any supporting evidence that you think might be useful in assessing your application'));
         $row->addFileUpload('supportingEvidence')
             ->setAttachment('supportingEvidence', $gibbon->session->get('absoluteURL'), $pdRequest['supportingEvidence']);
 
     $row = $form->addRow()->addClass('furtherInfo');
         $col = $row->addColumn();
-            $col->addLabel('notes', Format::bold(__('Comments/Notes')));
+            $col->addLabel('notesLabel', Format::bold(__('Comments/Notes')));
             $col->addContent($pdRequest['notes']);
 
     $row = $form->addRow();
@@ -303,7 +310,7 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
 
     $row = $form->addRow()->addClass('participants');
         $col = $row->addColumn();
-            $col->addLabel('teachers', Format::bold(__('Teachers/Staff')));
+            $col->addLabel('teacherLabel', Format::bold(__('Teachers/Staff')));
 
             $requestPersonGateway = $container->get(RequestPersonGateway::class);
             $peopleCriteria = $requestPersonGateway->newQueryCriteria()
@@ -394,7 +401,7 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
 
     if ($approveMode) {
         $row = $form->addRow();
-            $row->addLabel('action', __('Action'));
+            $row->addLabel('requestStatusLabel', __('Update the Request Status'));
             $row->addSelect('requestStatus')
                 ->fromArray(['Approval', 'Rejection', 'Comment']);
     }
@@ -402,7 +409,7 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
     if (!$readOnly) {
         $row = $form->addRow();
             $col = $row->addColumn();
-                $col->addLabel('comment', __('Comment'));
+                $col->addLabel('commentLabel', __('Comment'));
                 $col->addTextarea('comment');
 
         $row = $form->addRow();
@@ -482,6 +489,22 @@ function getSettings(ContainerInterface $container, $guid) {
         });
 
     return $settingFactory->getSettings();
+}
+
+function getCoverAmountArray() {
+    $options = array();
+
+        $options = array(
+            'No Cover Required' => __('No Cover Required'),
+            'Tutor group' => __('Tutor group'),
+            'Duty' => __('Duty'),
+            '1-5 Periods (include year 12 & 13 classes)' => __('1-5 Periods (include year 12 & 13 classes)'),
+            '6-10 Periods (include year 12 & 13 classes)' => __('6-10 Periods (include year 12 & 13 classes)'),
+            '11-15 Periods (include year 12 & 13 classes)' => __('11-15 Periods (include year 12 & 13 classes)'),
+            '16 Periods + (include year 12 & 13 classes)' => __('16 Periods + (include year 12 & 13 classes)')
+        );
+
+        return $options;
 }
 
 ?>
