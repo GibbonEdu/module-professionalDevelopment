@@ -378,45 +378,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     //This javascript is for the Date Blocks
     var date = 'input[id*="Date"]';
 
-    $(document).ready(function(){
-        
-        //Ensure that loaded dates have correct max and min dates.
-        $('input[id^=startDate]').each(function() {
-            var endDate = $('#' + $(this).prop('id').replace('start', 'end'));
-        });
-    });
-
-    $(document).on('change', 'input[id^=startDate]', function() {
-        var endDate = $('#' + $(this).prop('id').replace('start', 'end'));
-        if (endDate.val() == "" || $(this).val() > endDate.val()) {
-            endDate.val($(this).val());
-        }
-        endDate.datepicker('option', {'minDate': $(this).val()});
-    });
-
-    $(document).on('change', 'input[id^=endDate]', function() {
-        var startDate = $('#' + $(this).prop('id').replace('end', 'start'));
-        if (startDate.val() == "" || $(this).val() < startDate.val()) {
-            startDate.val($(this).val());
-        }
-        startDate.datepicker('option', {'maxDate': $(this).val()});
-    });
-
     function saveDraft() {
             $('option', '#teachers').each(function() {
                 $(this).prop('selected', true);
             });
 
-            var form = LiveValidationForm.getInstance(document.getElementById('requestForm'));
-
-            if (LiveValidation.massValidate(form.fields)) {
-                $('button[id="Save Draft"]').prop('disabled', true);
-                setTimeout(function() {
-                    $('button[id="Save Draft"]').wrap('<span class="submitted"></span>');
-                }, 500);
-                $('input[name="saveMode"]').val('Draft');
-                document.getElementById('requestForm').submit();
-            }
+            $('input[name="saveMode"]').val('Draft');
+            document.getElementById('requestForm').submit();
     }
 
 </script>
