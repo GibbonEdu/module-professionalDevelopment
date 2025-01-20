@@ -50,7 +50,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 	
     $gibbonPersonID = $session->get('gibbonPersonID');
     $gibbonDepartmentID = $_POST['gibbonDepartmentID'] ?? []; 
-    $search = $_POST['search'] ?? []; 
+    $search = $_POST['search'] ?? ''; 
 
     //Settings
     $settingGateway = $container->get(SettingGateway::class);
@@ -79,14 +79,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             return $group;
         }, []);
 
-        //Filters
-        
-
         //Filter Form
         $form = Form::create('requestFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
         $form->setFactory(DatabaseFormFactory::create($pdo));
         $form->setTitle(__('Filter'));
         $form->setClass('noIntBorder fullWidth');
+
+        $row = $form->addRow();
+            $row->addLabel('search', 'Search');
+            $row->addTextField('search')->setValue($search);
 
         if (!empty($departments)) {
             $row = $form->addRow();
@@ -98,8 +99,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         }
 
         $row = $form->addRow();
-            $row->addFooter();
-            $row->addSubmit();
+            $row->addSearchSubmit($session);
             
         echo $form->getOutput(); 
     }
@@ -108,6 +108,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $requestsGateway = $container->get(RequestsGateway::class);
     $criteria = $requestsGateway->newQueryCriteria(true)
+        ->searchBy($requestsGateway->getSearchableColumns(), $search)
         ->sortBy('firstDayOfTrip', 'DESC')
         ->filterBy('showActive', $highestAction == 'Manage Applications_full' ? 'Y' : '')
         ->fromPOST();
