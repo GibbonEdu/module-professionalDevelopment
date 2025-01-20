@@ -19,16 +19,19 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use Gibbon\Data\Validator;
 use Gibbon\Domain\System\SettingGateway;
 
 require_once '../../gibbon.php';
 require_once "./moduleFunctions.php";
 
+$_POST = $container->get(Validator::class)->sanitize($_POST, ['agreementDescription' => 'HTML', 'participantsBlurb' => 'HTML', 'expensesBlurb' => 'HTML']);
+
 $URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module');
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_manageSettings.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manageSettings.php')) {
     //Acess denied
-    $URL .= '/requests_manage.php&return=error0';
+    $URL .= '/pd_manage.php&return=error0';
     header("Location: {$URL}");
     exit();
 } else {
@@ -51,7 +54,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         }
     }
 
-    $URL .= '/requests_manageSettings.php&return=' . $return;
+    $URL .= '/pd_manageSettings.php&return=' . $return;
     header("Location: {$URL}");
     exit();
 }   

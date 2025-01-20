@@ -28,7 +28,7 @@ require_once __DIR__ . '/moduleFunctions.php';
 
 $page->breadcrumbs->add(__('Manage Approvers'));
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_manageApprovers.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manageApprovers.php')) {
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
@@ -37,10 +37,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $settingGateway = $container->get(SettingGateway::class);
     $requestApproversGateway = $container->get(RequestApproversGateway::class);
 
-    $highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/requests_manageApprovers.php', $connection2);
+    $highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/pd_manageApprovers.php', $connection2);
 
-    $addAllowed = ($highestAction == 'Manage Approvers_add&edit' || $highestAction == 'Manage Approvers_full');
-    $deleteAllowed = $highestAction == 'Manage Approvers_full';
+    $canEdit = $highestAction == 'Manage Approvers_full';
 
     $criteria = $requestApproversGateway->newQueryCriteria()
         ->sortBy(['sequenceNumber'])
@@ -55,16 +54,16 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     if ($chainOfAll) {
         $description = 'Note, the order shown below is the sequence order of approval.';
 
-        if ($addAllowed) {
+        if ($canEdit) {
             $description .= ' You may rearrange the approvers by dragging the rows up or down.';
-            $table->addDraggableColumn('professionalDevelopmentRequestApproversID', $session->get('absoluteURL') . '/modules/' . $moduleName . '/requests_manageApproversEditOrderAjax.php');
+            $table->addDraggableColumn('professionalDevelopmentRequestApproversID', $session->get('absoluteURL') . '/modules/' . $moduleName . '/pd_manageApproversEditOrderAjax.php');
         }
         $table->setDescription(__($description));
     }
 
-    if ($addAllowed) {
+    if ($canEdit) {
         $table->addHeaderAction('add', __('Add'))
-            ->setURL('/modules/' . $session->get('module') . '/requests_addApprover.php')
+            ->setURL('/modules/' . $session->get('module') . '/pd_addApprover.php')
             ->displayLabel(); 
     } 
 
@@ -73,7 +72,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         ->sortable(!$chainOfAll);
 
     $headApproval = $settingGateway->getSettingByScope($moduleName, 'headApproval');
-
     if ($headApproval) {
         $table->addColumn('finalApprover', __('Is a Final Approver?'))
         ->format(function ($approver) {
@@ -82,19 +80,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         ->sortable(!$chainOfAll);
     }
 
-    if ($addAllowed) {
+    if ($canEdit) {
         $table->addActionColumn()
             ->addParam('professionalDevelopmentRequestApproversID')
-            ->format(function ($approver, $actions) use ($headApproval, $deleteAllowed, $moduleName) {
-                if($headApproval) {
-                    $actions->addAction('edit', __('Edit'))
-                            ->setURL('/modules/' . $moduleName . '/requests_editApprover.php')
-                            ->modalWindow();
-                }
-                if ($deleteAllowed) {
-                    $actions->addAction('delete', __('Delete'))
-                            ->setURL('/modules/' . $moduleName . '/requests_deleteApprover.php');
-                }
+            ->format(function ($approver, $actions) use ($moduleName) {
+                
+                $actions->addAction('edit', __('Edit'))
+                        ->setURL('/modules/' . $moduleName . '/pd_editApprover.php')
+                        ->modalWindow();
+                
+                
+                $actions->addAction('delete', __('Delete'))
+                        ->setURL('/modules/' . $moduleName . '/pd_deleteApprover.php');
+                
                 
             });
     }

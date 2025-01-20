@@ -25,34 +25,33 @@ use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
 
 $page->breadcrumbs
-    ->add(__('Manage Approvers'), 'requests_manageApprovers.php')
+    ->add(__('Manage Approvers'), 'pd_manageApprovers.php')
     ->add(__('Add Approver'));
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_addApprover.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_addApprover.php')) {
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-    $page->return->setEditLink($session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module') . '/requests_manageApprovers.php');
+    $page->return->setEditLink($session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module') . '/pd_manageApprovers.php');
 
     $requestApproversGateway = $container->get(RequestApproversGateway::class);
 
-    $form = Form::create('addApprover', $session->get('absoluteURL') . '/modules/' . $session->get('module') . '/requests_addApproverProcess.php', 'post');
+    $form = Form::create('addApprover', $session->get('absoluteURL') . '/modules/' . $session->get('module') . '/pd_addApproverProcess.php', 'post');
     $form->addHiddenValue('address', $session->get('address'));
     $form->setFactory(DatabaseFormFactory::create($pdo));
     $form->setTitle('Add Approver');
 
     $row = $form->addRow();
-        $row->addLabel('gibbonPersonID', 'Staff');
+        $row->addLabel('gibbonPersonID', __('Staff'));
         $row->addSelectPerson('gibbonPersonID')
             ->fromArray($requestApproversGateway->selectStaffForApprover())
-            ->setRequired(true)
-            ->placeholder('Please select...');
+            ->required()
+            ->placeholder();
             
     $headApproval = $container->get(SettingGateway::class)->getSettingByScope('Professional Development', 'headApproval');
-
     if($headApproval) {
         $row = $form->addRow();
-            $row->addLabel('finalApprover', 'Final Approver');
+            $row->addLabel('finalApprover', __m('Final Approver'));
             $row->addCheckbox('finalApprover');
     }
 

@@ -32,30 +32,34 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
 // Module includes
 require_once __DIR__ . '/moduleFunctions.php';
 
-$page->breadcrumbs->add(__('Manage Professional Development Requests'));
+$page->breadcrumbs->add(__('Manage Applications'));
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_manage.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manage.php')) {
 	// Access denied
 	$page->addError(__('You do not have access to this action.'));
 } else {
-	$highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/requests_manage.php', $connection2);
+	$highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/pd_manage.php', $connection2);
 
 	if (empty($highestAction)) {
         $page->addError(__('The highest grouped action cannot be determined.'));
         return;   
     }
 
-	$gibbonPersonID = $session->get('gibbonPersonID');
+    $gibbonSchoolYearID = $_REQUEST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
+    $page->navigator->addSchoolYearNavigation($gibbonSchoolYearID);
+	
+    $gibbonPersonID = $session->get('gibbonPersonID');
+    $gibbonDepartmentID = $_POST['gibbonDepartmentID'] ?? []; 
+    $search = $_POST['search'] ?? []; 
 
-     //Settings
-     $settingGateway = $container->get(SettingGateway::class);
-    
-     $requestApprovalType = $settingGateway->getSettingByScope('Professional Development', 'requestApprovalType');
-     $headApproval = $settingGateway->getSettingByScope('Professional Development', 'headApproval');
-     $expiredUnapproved = $settingGateway->getSettingByScope('Professional Development', 'expiredUnapprovedFilter');
+    //Settings
+    $settingGateway = $container->get(SettingGateway::class);
 
-     //Permissions
+    $requestApprovalType = $settingGateway->getSettingByScope('Professional Development', 'requestApprovalType');
+    $headApproval = $settingGateway->getSettingByScope('Professional Development', 'headApproval');
+    $expiredUnapproved = $settingGateway->getSettingByScope('Professional Development', 'expiredUnapprovedFilter');
 
+    //Permissions
     $requestApproversGateway = $container->get(RequestApproversGateway::class);
 
     $approver = $requestApproversGateway->selectApproverByPerson($gibbonPersonID);
@@ -64,57 +68,51 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $checkAwaitingApproval = ($isApprover && $requestApprovalType == 'Chain Of All') || ($headApproval && $finalApprover);
 
-     //Department Data
-     $departmentGateway = $container->get(DepartmentGateway::class);
-     $departmentsList = $departmentGateway->selectDepartmentsByPerson($gibbonPersonID, 'Coordinator');
-     
-     $departments = array_reduce($departmentsList->fetchAll(), function ($group, $department) {
-         $group[$department['gibbonDepartmentID']] = $department['name'];
-         return $group;
-     }, []);
-
-     //Filters
-    $gibbonDepartmentID = $_POST['gibbonDepartmentID'] ?? []; 
-    $gibbonSchoolYearID = $_REQUEST['gibbonSchoolYearID'] ?? $session->get('gibbonSchoolYearID');
-
-    //Filter Form
-    $form = Form::create('requestFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
-    $form->setFactory(DatabaseFormFactory::create($pdo));
-    $form->setTitle(__('Filter'));
-    $form->setClass('noIntBorder fullWidth');
-
-    if (!empty($departments)) {
-        $row = $form->addRow();
-            $row->addLabel('gibbonDepartmentID', 'Department');
-            $row->addSelect('gibbonDepartmentID')
-                ->fromArray($departments)
-                ->placeholder()
-                ->selected($gibbonDepartmentID);
-    }
-
-    $row = $form->addRow();
-        $row->addLabel('gibbonSchoolYearID', 'Year');
-        $row->addSelectSchoolYear('gibbonSchoolYearID')
-            ->selected($gibbonSchoolYearID);
-
-    $row = $form->addRow();
-        $row->addFooter();
-        $row->addSubmit();
+    // SEARCH
+    if ($highestAction == 'Manage Applications_full') {
+        //Department Data
+        $departmentGateway = $container->get(DepartmentGateway::class);
+        $departmentsList = $departmentGateway->selectDepartmentsByPerson($gibbonPersonID, 'Coordinator');
         
-    print $form->getOutput(); 
+        $departments = array_reduce($departmentsList->fetchAll(), function ($group, $department) {
+            $group[$department['gibbonDepartmentID']] = $department['name'];
+            return $group;
+        }, []);
+
+        //Filters
+        
+
+        //Filter Form
+        $form = Form::create('requestFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
+        $form->setFactory(DatabaseFormFactory::create($pdo));
+        $form->setTitle(__('Filter'));
+        $form->setClass('noIntBorder fullWidth');
+
+        if (!empty($departments)) {
+            $row = $form->addRow();
+                $row->addLabel('gibbonDepartmentID', 'Department');
+                $row->addSelect('gibbonDepartmentID')
+                    ->fromArray($departments)
+                    ->placeholder()
+                    ->selected($gibbonDepartmentID);
+        }
+
+        $row = $form->addRow();
+            $row->addFooter();
+            $row->addSubmit();
+            
+        echo $form->getOutput(); 
+    }
 
     //Professional Development Request Data
 
     $requestsGateway = $container->get(RequestsGateway::class);
     $criteria = $requestsGateway->newQueryCriteria(true)
         ->sortBy('firstDayOfTrip', 'DESC')
-        ->filterBy('showActive', 'Y')
+        ->filterBy('showActive', $highestAction == 'Manage Applications_full' ? 'Y' : '')
         ->fromPOST();
 
-    $gibbonPersonIDFilter = $highestAction == 'Manage Requests_full' || $highestAction == 'Manage Requests_view'
-        ? null
-        : $gibbonPersonID;
-
+    $gibbonPersonIDFilter = $highestAction == 'Manage Applications_full' ? null : $gibbonPersonID;
     $requests = $requestsGateway->queryRequests($criteria, $gibbonSchoolYearID, $gibbonPersonIDFilter, $gibbonDepartmentID, $expiredUnapproved);
 
     $requests->transform(function (&$request) use ($container, $gibbonPersonID, $checkAwaitingApproval) {
@@ -130,7 +128,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     //Requests Table
 
     $table = DataTable::createPaginated('requests', $criteria);
-    $table->setTitle(__('Requests'));
+    $table->setTitle($highestAction == 'Manage Applications_full' ? __('All Applications') : __('My Applications'));
 
     $table->modifyRows(function (&$request, $row) {
         if ($request['status'] == 'Approved') $row->addClass('success');
@@ -146,14 +144,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         return $filters;
     });
 
-    $filters['showActive:Y'] = __m('Upcoming / Approved Trips');
+    $filters['showActive:Y'] = __m('Upcoming / Approved');
     
     $table->addMetaData('post', ['gibbonSchoolYearID' => $gibbonSchoolYearID]);
     $table->addMetaData('filterOptions', $filters);
     
-    $table->addHeaderAction('add', __('Submit Request'))
+    $table->addHeaderAction('add', __('New Application'))
         ->displayLabel()
-        ->setURL('/modules/Professional Development/requests_add.php');
+        ->setURL('/modules/Professional Development/pd_add.php');
     
     $table->addExpandableColumn('contents')
         ->format(function ($request) {
@@ -188,17 +186,17 @@ $table->addActionColumn()
 
             if (needsApproval($container, $gibbonPersonID, $request['professionalDevelopmentRequestID'])) {
                 $actions->addAction('approve', __('Approve/Reject'))
-                    ->setURL('/modules/Professional Development/requests_approve.php')
+                    ->setURL('/modules/Professional Development/pd_approve.php')
                     ->setIcon('iconTick');
             }
 
             $actions->addAction('view', __('View Details'))
-                ->setURL('/modules/Professional Development/requests_view.php');
+                ->setURL('/modules/Professional Development/pd_view.php');
 
-            if (($highestAction == 'Manage Requests_full' || $gibbonPersonID == $request['gibbonPersonIDCreated']) && !in_array($request['status'], ['Cancelled', 'Rejected'])) {
+            if (($highestAction == 'Manage Applications_full' || $gibbonPersonID == $request['gibbonPersonIDCreated']) && !in_array($request['status'], ['Cancelled', 'Rejected'])) {
                 $actions->addAction('edit', __('Edit'))
                     ->addParam('mode', 'edit')
-                    ->setURL('/modules/Professional Development/requests_add.php');
+                    ->setURL('/modules/Professional Development/pd_add.php');
             }
     });
 

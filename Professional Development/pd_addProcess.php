@@ -65,18 +65,18 @@ $isDraft = !empty($pdRequest) && $pdRequest['status'] == 'Draft';
 $gibbonPersonID = $session->get('gibbonPersonID');
 $personName = Format::name('', $session->get('preferredName'), $session->get('surname'), 'Staff', false, true);
 
-$highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/requests_manage.php', $connection2);
+$highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/pd_manage.php', $connection2);
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_add.php') || ($edit && $highestAction != 'Manage Requests_full' && $pdRequest['gibbonPersonIDCreated'] != $gibbonPersonID)) {
-    $URL .= '/requests_manage.php&return=error0';
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_add.php') || ($edit && $highestAction != 'Manage Applications_full' && $pdRequest['gibbonPersonIDCreated'] != $gibbonPersonID)) {
+    $URL .= '/pd_manage.php&return=error0';
     header("Location: {$URL}");
     exit;
 } else if ((isset($pdRequest) && empty($pdRequest)) || (!empty($mode) && !$edit)) {
-    $URL .= '/requests_add.php&return=error1&reason=a';
+    $URL .= '/pd_add.php&return=error1&reason=a';
     header("Location: {$URL}");
     exit;
 } else {
-    $URL .= '/requests_add.php&professionalDevelopmentRequestID='.$professionalDevelopmentRequestID.'&mode='.$mode;
+    $URL .= '/pd_add.php&professionalDevelopmentRequestID='.$professionalDevelopmentRequestID.'&mode='.$mode;
 
     $gibbonSchoolYearID = $session->get('gibbonSchoolYearID');
 
@@ -103,16 +103,16 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     ];   
 
     foreach ($requestData as $key => $required) {
-        if (!empty($_POST[$key])) {
-            $requestData[$key] = $_POST[$key];
-        } else if ($required) {
+        $requestData[$key] = $_POST[$key] ?? '';
+
+        if ($required && empty($requestData[$key])) {
             $partialFail = true;
             $returnCode = 'warning3';
         }
     }
 
     //Cover Amount
-    $requestData['coverAmount'] = (!empty($_POST['coverAmount'])) ? serialize($_POST['coverAmount']) : '';
+    $requestData['coverAmount'] = (!empty($_POST['coverAmount'])) ? json_encode($_POST['coverAmount']) : '';
 
     // Move attached file, if there is one
     if (!empty($_FILES['supportingEvidenceFile']['tmp_name'])) {
@@ -126,8 +126,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         if (empty($requestData['supportingEvidence'])) {
             $partialFail = true;
         }
+    } elseif (empty($_POST['supportingEvidence'])) {
+        $requestData['supportingEvidence'] = '';
     } else {
-        $requestData['supportingEvidence'] = $_POST['supportingEvidence'] ?? '';
+        unset($requestData['supportingEvidence']);
     }
 
     if ($mode != 'edit') {
@@ -170,7 +172,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     foreach ($dateTimeOrder as $order) {
         $day = $_POST['dateTime'][$order];
 
-        if (!$day['startDate'] || !$day['endDate']) {
+        if (!$day['date']) {
             $partialFail = true;
             $returnCode = 'warning7';
             continue;
@@ -178,8 +180,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
         $data = [
             'professionalDevelopmentRequestID' => $professionalDevelopmentRequestID,
-            'startDate' => $day['startDate'] ?? '',
-            'endDate'   => $day['endDate'] ?? '',
+            'date' => $day['date'] ?? '',
         ];
 
         $professionalDevelopmentRequestDaysID = $day['professionalDevelopmentRequestDaysID'] ?? '';
@@ -215,7 +216,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             'professionalDevelopmentRequestID' => $professionalDevelopmentRequestID,
             'title'                            => $cost['title'] ?? '',
             'description'                      => $cost['description']  ?? '',
-            'cost'                             => $cost['cost']  ?? ''
+            'cost'                             => $cost['cost']  ?? '',
+            'quantity'                         => $cost['quantity']  ?? '',
         ];
 
         $professionalDevelopmentRequestCostID = $cost['professionalDevelopmentRequestCostID'] ?? '';
@@ -244,7 +246,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
         $data = [
             'professionalDevelopmentRequestID' => $professionalDevelopmentRequestID,
-            'gibbonPersonID' => $participant['gibbonPersonID'] ?? ''
+            'gibbonPersonID'                   => $participant['gibbonPersonID'] ?? '',
+            'role'                             => $participant['role'] ?? '',
         ];
 
         $professionalDevelopmentRequestPersonID = $participant['professionalDevelopmentRequestPersonID'] ?? '';
@@ -282,7 +285,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $event = new NotificationEvent('Professional Development', 'New Request');
 
         $event->setNotificationText(__('{person} has submitted a new PD Request: {request}', ['person' => $personName, 'request' => $requestData['eventTitle']]));
-        $event->setActionLink('/index.php?q=/modules/Professional Development/requests_approve.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID);
+        $event->setActionLink('/index.php?q=/modules/Professional Development/pd_approve.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID);
 
         $requestApprovalType = $settingGateway->getSettingByScope('Professional Development', 'requestApprovalType');
         $requestApproversGateway = $container->get(RequestApproversGateway::class);
@@ -304,7 +307,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $event->pushNotifications($notificationGateway, $notificationSender);
 
         // Add a notification for the trip owner
-        $notificationSender->addNotification($gibbonPersonID, __('You have submitted a new PD Request (pending approval): {request}', ['request' => $requestData['eventTitle']]), 'Professional Development', '/index.php?q=/modules/Professional Development/requests_view.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID);
+        $notificationSender->addNotification($gibbonPersonID, __('You have submitted a new PD Request (pending approval): {request}', ['request' => $requestData['eventTitle']]), 'Professional Development', '/index.php?q=/modules/Professional Development/pd_view.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID);
 
         $notificationSender->sendNotifications();
     }

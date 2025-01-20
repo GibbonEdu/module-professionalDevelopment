@@ -22,7 +22,7 @@ class RequestDaysGateway extends QueryableGateway
         $query = $this->newQuery()
         ->from($this->getTableName())
         ->cols([
-            'professionalDevelopmentRequestDaysID', 'professionalDevelopmentRequestID', 'startDate', 'endDate', 'allDay'
+            'professionalDevelopmentRequestDaysID', 'professionalDevelopmentRequestID', 'date', 'allDay'
         ]);
 
         $criteria->addFilterRules([

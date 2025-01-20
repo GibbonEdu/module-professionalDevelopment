@@ -24,7 +24,7 @@ class RequestPersonGateway extends QueryableGateway
         ->from($this->getTableName())
         ->innerJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID = professionalDevelopmentRequestPerson.gibbonPersonID')
         ->cols([
-            'gibbonPerson.gibbonPersonID', 'professionalDevelopmentRequestPerson.professionalDevelopmentRequestPersonID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname', 'gibbonPerson.image_240',
+            'gibbonPerson.gibbonPersonID', 'professionalDevelopmentRequestPerson.professionalDevelopmentRequestPersonID', 'professionalDevelopmentRequestPerson.role', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname', 'gibbonPerson.image_240',
             'professionalDevelopmentRequestPerson.professionalDevelopmentRequestID'
         ]);
 

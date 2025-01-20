@@ -24,7 +24,7 @@ use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
 
-if (!isActionAccessible($guid, $connection2, "/modules/Professional Development/requests_editApprover.php")) {
+if (!isActionAccessible($guid, $connection2, "/modules/Professional Development/pd_editApprover.php")) {
 	// Access denied
 	$page->addError(__('You do not have access to this action.'));
 }
@@ -36,7 +36,7 @@ else {
     $approver = $requestApproversGateway->getByID($professionalDevelopmentRequestApproversID);
 
     if (!empty($approver)) {
-        $form = Form::create('editApprover', $session->get('absoluteURL') . '/modules/' . $session->get('module') . '/requests_editApproverProcess.php', 'post');
+        $form = Form::create('editApprover', $session->get('absoluteURL') . '/modules/' . $session->get('module') . '/pd_editApproverProcess.php', 'post');
         $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('professionalDevelopmentRequestApproversID', $professionalDevelopmentRequestApproversID);
         $form->setFactory(DatabaseFormFactory::create($pdo));

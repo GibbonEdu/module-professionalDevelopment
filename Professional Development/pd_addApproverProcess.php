@@ -25,14 +25,14 @@ require_once '../../gibbon.php';
 
 $URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module');
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_addApprover.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_addApprover.php')) {
     //Acess denied
-    $URL .= '/requests_manageApprovers.php&return=error0';
+    $URL .= '/pd_manageApprovers.php&return=error0';
     header("Location: {$URL}");
     exit();
 }
 else {
-    $URL .= '/requests_addApprover.php';
+    $URL .= '/pd_addApprover.php';
 
     $requestApproversGateway = $container->get(RequestApproversGateway::class);
 

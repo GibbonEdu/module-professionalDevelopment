@@ -23,21 +23,29 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
-$page->breadcrumbs
-        ->add(__('Request Archive'), 'requests_archive.php')
-        ->add(__('View Archived Request'));
+$page->breadcrumbs->add(__('Manage Applications'), 'pd_manage.php')
+                  ->add(__('View Application'));
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_archiveView.php')) {
-    $page->addError(__('You do not have access to this action.'));
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manage.php')) {
+	$page->addError(__('You do not have access to this action.'));
 } else {
-    $professionalDevelopmentRequestID = $_GET['professionalDevelopmentRequestID'] ?? '';
+    $professionalDevelopmentRequestID = $_GET['professionalDevelopmentRequestID'];
 
     $requestsGateway = $container->get(RequestsGateway::class);
 
     if (empty($professionalDevelopmentRequestID) || !$requestsGateway->exists($professionalDevelopmentRequestID)) {
         $page->addError('No request selected.');
-        return;
-    }
+    } else {
+        $gibbonPersonID = $session->get("gibbonPersonID");
+        $highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/pd_manage.php', $connection2);
 
-    renderRequest($container, $professionalDevelopmentRequestID, false, true, false);
-}
+        if (hasAccess($container, $professionalDevelopmentRequestID, $gibbonPersonID, $highestAction)) {
+            $readOnly = $highestAction == 'Manage Applications_my';
+            renderRequest($container, $professionalDevelopmentRequestID, false, $readOnly);
+        } else {
+            $page->addError(__('You do not have access to this action.'));
+        }
+    }
+}	
+
+?>

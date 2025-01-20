@@ -23,7 +23,7 @@ class RequestCostGateway extends QueryableGateway
         $query = $this->newQuery()
         ->from($this->getTableName())
         ->cols([
-            'professionalDevelopmentRequestCostID', 'professionalDevelopmentRequestID', 'title', 'description', 'cost'
+            'professionalDevelopmentRequestCostID', 'professionalDevelopmentRequestID', 'title', 'description', 'cost', 'quantity'
         ]);
 
         $criteria->addFilterRules([

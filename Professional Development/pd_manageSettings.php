@@ -26,7 +26,7 @@ require_once __DIR__ . '/moduleFunctions.php';
 
 $page->breadcrumbs->add(__('Manage Settings'));
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_manageSettings.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manageSettings.php')) {
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
@@ -35,7 +35,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $moduleName = $session->get('module'); 
 
-    $form = Form::create('professionalDevelopmentSettings', $session->get('absoluteURL') . '/modules/Professional Development/requests_manageSettingsProcess.php');
+    $form = Form::create('professionalDevelopmentSettings', $session->get('absoluteURL') . '/modules/Professional Development/pd_manageSettingsProcess.php');
     $form->addHiddenValue('address', $session->get('address'));
     $form->setTitle(__('Professinal Development Request Settings'));
 

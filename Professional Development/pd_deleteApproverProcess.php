@@ -23,9 +23,9 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
 
 require_once '../../gibbon.php';
 
-$URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module') . '/requests_manageApprovers.php';
+$URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module') . '/pd_manageApprovers.php';
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_deleteApproverProcess.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_deleteApproverProcess.php')) {
     //Acess denied
     $URL .= '&return=error0';
     header("Location: {$URL}");

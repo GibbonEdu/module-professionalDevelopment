@@ -32,9 +32,9 @@ $moduleName = $session->get('module');
 
 $URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $moduleName;
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_manage.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manage.php')) {
     // Access denied
-    $URL .= '/requests_manage.php&return=error0';
+    $URL .= '/pd_manage.php&return=error0';
     header("Location: {$URL}");
     exit();
 } else {
@@ -43,7 +43,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $requestsGateway = $container->get(RequestsGateway::class);
 
     if (empty($professionalDevelopmentRequestID) || !$requestsGateway->exists($professionalDevelopmentRequestID)) {
-        $URL .= '/requests_manage.php&return=error1';
+        $URL .= '/pd_manage.php&return=error1';
         header("Location: {$URL}");
         exit();
     }
@@ -52,11 +52,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $gibbonPersonID = $session->get('gibbonPersonID');
     $personName = Format::name('', $session->get('preferredName'), $session->get('surname'), 'Staff', false, true);
 
-    $highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/requests_manage.php', $connection2);
-    $readOnly = $highestAction == 'Manage Requests_view';
+    $highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/pd_manage.php', $connection2);
+    $readOnly = $highestAction == 'Manage Applications_my';
 
     if (hasAccess($container, $professionalDevelopmentRequestID, $gibbonPersonID, $highestAction) && !$readOnly) {
-        $URL .= '/requests_view.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID;
+        $URL .= '/pd_view.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID;
 
         $comment = $_POST['comment'] ?? '';
 
@@ -93,7 +93,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         exit();
     
     } else {
-        $URL .= '/requests_manage.php&return=error0';
+        $URL .= '/pd_manage.php&return=error0';
         header("Location: {$URL}");
         exit();
     }

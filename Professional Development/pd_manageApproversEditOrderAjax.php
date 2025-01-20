@@ -22,11 +22,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
 
 
-$_POST['address'] = '/modules/Professional Development/requests_manageApprovers.php';
+$_POST['address'] = '/modules/Professional Development/pd_manageApprovers.php';
 
 require_once '../../gibbon.php';
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_manageApprovers.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manageApprovers.php')) {
     exit();
 } else {
     // Proceed!

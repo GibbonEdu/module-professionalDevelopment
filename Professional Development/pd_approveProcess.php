@@ -31,7 +31,7 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
 require_once '../../gibbon.php';
 require_once "./moduleFunctions.php";
 
-$_POST['address'] = '/modules/Professional Development/requests_manage.php';
+$_POST['address'] = '/modules/Professional Development/pd_manage.php';
 
 $absoluteURL = $session->get('absoluteURL');
 $moduleName = $session->get('module');
@@ -45,9 +45,9 @@ $approver = $requestApproversGateway->selectApproverByPerson($gibbonPersonID);
 $isApprover = !empty($approver);
 $finalApprover = $isApprover ? $approver['finalApprover'] : false;
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_manage.php') || !$isApprover) {
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manage.php') || !$isApprover) {
     //Acess denied
-    $URL .= '/requests_manage.php&return=error0';
+    $URL .= '/pd_manage.php&return=error0';
     header("Location: {$URL}");
     exit();
 } else {
@@ -66,13 +66,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
         // Approver cannot approve their own trip
         if ($owner == $session->get('gibbonPersonID')) {
-            $URL .= '/requests_manage.php&return=error1';
+            $URL .= '/pd_manage.php&return=error1';
             header("Location: {$URL}");
             exit();
         }
 
         if (needsApproval($container, $gibbonPersonID, $professionalDevelopmentRequestID)) {
-            $URL .= '/requests_approve.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID;
+            $URL .= '/pd_approve.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID;
 
             $requestStatus = $_POST['requestStatus'] ?? '';
             $comment = $_POST['comment'] ?? '';
@@ -86,7 +86,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             $notificationGateway = $container->get(NotificationGateway::class);
             $notificationSender = new NotificationSender($notificationGateway, $session);
 
-            $notificationURL = '/index.php?q=/modules/' . $moduleName . '/requests_view.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID;
+            $notificationURL = '/index.php?q=/modules/' . $moduleName . '/pd_view.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID;
             $commentText = !empty($comment) ? '<br/><br/><b>'.__('Comment').':</b><br/>'.$comment : '';
 
             $requestLogGateway = $container->get(RequestLogGateway::class);
@@ -163,7 +163,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                         $requestStatus .= ' - Partial';
                         $nextApprover = $nextApprover->fetch();
 
-                        $notificationSender->addNotification($nextApprover['gibbonPersonID'], __('A Professional Development request is awaiting your approval.'), $moduleName, $absoluteURL . '/index.php?q=/modules/' . $moduleName . '/requests_approve.php&professionalDevelopmentRequestID='. $professionalDevelopmentRequestID);
+                        $notificationSender->addNotification($nextApprover['gibbonPersonID'], __('A Professional Development request is awaiting your approval.'), $moduleName, $absoluteURL . '/index.php?q=/modules/' . $moduleName . '/pd_approve.php&professionalDevelopmentRequestID='. $professionalDevelopmentRequestID);
 
                         if ($owner != $gibbonPersonID) {
                             $notificationSender->addNotification($owner, __('Your PD request has been partially approved by {person} and is awaiting final approval.', ['person' => $personName]).$commentText, $moduleName, $notificationURL);
@@ -212,19 +212,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
             $approval = 'Approval';
             if (substr($requestStatus, 0, strlen($approval)) == $approval) {
-                $URL = $absoluteURL . '/index.php?q=/modules/' . $moduleName . '/requests_manage.php';
+                $URL = $absoluteURL . '/index.php?q=/modules/' . $moduleName . '/pd_manage.php';
             }
 
             $URL .= '&return=success0';
             header("Location: {$URL}");
             exit();
         } else {
-            $URL .= '/requests_manage.php&return=error1';
+            $URL .= '/pd_manage.php&return=error1';
             header("Location: {$URL}");
             exit();
         }
     } else {
-        $URL .= '/requests_manage.php&return=error1';
+        $URL .= '/pd_manage.php&return=error1';
         header("Location: {$URL}");
         exit();
     }

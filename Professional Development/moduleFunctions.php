@@ -33,6 +33,7 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestCostGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestDaysGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestPersonGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
+use Gibbon\Domain\User\UserGateway;
 
 function getStatuses() {
     return [
@@ -47,12 +48,12 @@ function getStatuses() {
 function hasAccess(ContainerInterface $container, $professionalDevelopmentRequestID, $gibbonPersonID, $highestAction) {
 
     //Has full access?
-    if ($highestAction == 'Manage Requests_full') {
+    if ($highestAction == 'Manage Applications_full') {
         return true;
     }
 
     //Has read-only access?
-    if ($highestAction == 'Manage Requests_view') {
+    if ($highestAction == 'Manage Applications_my') {
         return true;
     }
 
@@ -139,14 +140,14 @@ function formatExpandableSection($title, $content) {
     $output = '';
 
     $output .= '<h6>' . $title . '</h6></br>';
-    $output .= nl2brr($content);
+    $output .= nl2br($content);
 
     return $output;
 }
 
 function requestCommentNotifications($professionalDevelopmentRequestID, $gibbonPersonID, $personName, $requestLogGateway, $request, $comment, $notificationSender) {
     $text = __('{person} has commented on a PD request: {request}', ['person' => $personName, 'request' => $request['eventTitle']]).'<br/><br/><b>'.__('Comment').':</b><br/>'.$comment;
-    $notificationURL = '/index.php?q=/modules/Professional Development/requests_view.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID;
+    $notificationURL = '/index.php?q=/modules/Professional Development/pd_view.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID;
 
     $people = $requestLogGateway->selectLoggedPeople($professionalDevelopmentRequestID);
     while ($row = $people->fetch()) {
@@ -158,23 +159,25 @@ function requestCommentNotifications($professionalDevelopmentRequestID, $gibbonP
 
 //Get the PD request details from the DB and put into the form
 function renderRequest(ContainerInterface $container, $professionalDevelopmentRequestID, $approveMode, $readOnly = false, $showLogs = true) {
-    global $gibbon;
+    global $session;
 
-    $gibbonPersonID = $gibbon->session->get('gibbonPersonID');
-    $moduleName = $gibbon->session->get('module');
+    $gibbonPersonID = $session->get('gibbonPersonID');
+    $moduleName = $session->get('module');
 
     $requestsGateway = $container->get(RequestsGateway::class);
     $pdRequest = $requestsGateway->getByID($professionalDevelopmentRequestID);
 
-    $link = $gibbon->session->get('absoluteURL') . '/modules/' . $moduleName . '/requests_' . ($approveMode ? "approve" : "view") . 'Process.php';
+    $applicant = $container->get(UserGateway::class)->getByID($pdRequest['gibbonPersonIDCreated'], ['preferredName', 'surname']);
+
+    $link = $session->get('absoluteURL') . '/modules/' . $moduleName . '/pd_' . ($approveMode ? "approve" : "view") . 'Process.php';
     $form = Form::create('requestForm', $link);
-    $form->addHiddenValue('address', $gibbon->session->get('address'));
+    $form->addHiddenValue('address', $session->get('address'));
     $form->addHiddenValue('professionalDevelopmentRequestID', $professionalDevelopmentRequestID);
 
     if ($gibbonPersonID == $pdRequest['gibbonPersonIDCreated']) {
         //Edit
         $form->addHeaderAction('edit', __('Edit'))
-            ->setURL('/modules/' . $moduleName . '/requests_add.php')
+            ->setURL('/modules/' . $moduleName . '/pd_add.php')
             ->addParam('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
             ->addParam('mode', 'edit')
             ->displayLabel();
@@ -183,20 +186,20 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
     if ($approveMode) {
         //View
         $form->addHeaderAction('view', __('View'))
-            ->setURL('/modules/' . $moduleName . '/requests_view.php')
+            ->setURL('/modules/' . $moduleName . '/pd_view.php')
             ->addParam('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
             ->displayLabel();
     } else if (needsApproval($container, $gibbonPersonID, $professionalDevelopmentRequestID)) {
         //Approve
         $form->addHeaderAction('approve', __('Approve'))
             ->setIcon('iconTick')
-            ->setURL('/modules/' . $moduleName . '/requests_approve.php')
+            ->setURL('/modules/' . $moduleName . '/pd_approve.php')
             ->addParam('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
             ->displayLabel();
     }
 
-    $on = './themes/'.$gibbon->session->get("gibbonThemeName").'/img/minus.png';
-    $off = './themes/'.$gibbon->session->get("gibbonThemeName").'/img/plus.png';
+    $on = './themes/'.$session->get("gibbonThemeName").'/img/minus.png';
+    $off = './themes/'.$session->get("gibbonThemeName").'/img/plus.png';
 
     function toggleSection(&$row, $section, $icon) {
         $row->addWebLink(sprintf('<img title=%1$s src="%2$s" style="margin-right:4px;" />', __('Show/Hide'), $icon))
@@ -209,52 +212,63 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
         toggleSection($row, 'basicInfo', $on);
 
     $row = $form->addRow()->addClass('basicInfo');
-        $row->addLabel('eventTypeLabel', Format::bold(__('Event Type')));
-        $row->addTextfield('eventType')
+        $row->addLabel('eventTypeLabel', __('Event Type'));
+        $row->addTextField('eventType')
             ->readonly();
 
     $row = $form->addRow()->addClass('basicInfo');
-        $row->addLabel('eventFocusLabel', Format::bold(__('Area of Focus')));
-            $row->addTextfield('eventFocus')
-                ->readonly();
+        $row->addLabel('eventFocusLabel', __('Area of Focus'));
+        $row->addTextField('eventFocus')
+            ->readonly();
 
     $row = $form->addRow()->addClass('basicInfo');
-                $row->addLabel('attendeeRoleLabel', Format::bold(__('Participant(s) Role')));
-                    $row->addTextfield('attendeeRole')
-                        ->readonly();
+        $row->addLabel('applicant', __('PD Applicant'));
+        $row->addContent(Format::nameLinked($pdRequest['gibbonPersonIDCreated'], '', $applicant['preferredName'], $applicant['surname'], 'Staff', false, true))
+            ->wrap('<div class="text-left w-full text-sm">', '</div>');
+
+    // $coverAmount = json_decode($pdRequest['coverAmount'], true);
+    // $row = $form->addRow()->addClass('basicInfo');
+    //             $row->addLabel('coverAmountLabel', __('Cover Amount'));
+    //                 $row->addCheckbox('coverAmount')
+    //                         ->fromArray($coverAmount)
+    //                         ->readonly();
 
     $row = $form->addRow()->addClass('basicInfo');
-                $row->addLabel('attendeeCountLabel', Format::bold(__('No. of Particpants')));
-                $row->addTextfield('attendeeCount')
-                        ->readonly();
-
-    $coverAmount = unserialize($pdRequest['coverAmount']);
-    $row = $form->addRow()->addClass('basicInfo');
-                $row->addLabel('coverAmountLabel', Format::bold(__('Cover Amount')));
-                    $row->addCheckbox('coverAmount')
-                            ->fromArray($coverAmount)
-                            ->readonly();
+    $row->addLabel('statusLabel', __('Status'));
+    $row->addTextField('status')
+        ->readOnly();
                             
+    $row = $form->addRow();
+    $row->addHeading('Conference/Event Details', __('Conference/Event Details'));
+    toggleSection($row, 'eventInfo', $on);
                             
-    $row = $form->addRow()->addClass('basicInfo');
-                $row->addLabel('eventTitleLabel', Format::bold(__('Event Name')));
-                $row->addTextfield('eventTitle')
+    $row = $form->addRow()->addClass('eventInfo');
+                $row->addLabel('eventTitleLabel', __('Event Name'));
+                $row->addTextField('eventTitle')
                     ->readonly();
 
-    $row = $form->addRow()->addClass('basicInfo');
-        $row->addLabel('eventLocationLabel', Format::bold(__('Location')));
-        $row->addTextfield('eventLocation')
+    $row = $form->addRow()->addClass('eventInfo');
+        $row->addLabel('eventLocationLabel', __('Location'));
+        $row->addTextField('eventLocation')
             ->readonly();
 
-    $row = $form->addRow()->addClass('basicInfo');
+    $row = $form->addRow()->addClass('eventInfo');
         $col = $row->addColumn();
-            $col->addLabel('eventDescriptionLabel', Format::bold(__('Event Description')));
+            $col->addLabel('eventDescriptionLabel', __('Event Description'));
             $col->addContent($pdRequest['eventDescription']);
 
-    $row = $form->addRow()->addClass('basicInfo');
-        $row->addLabel('statusLabel', Format::bold(__('Status')));
-        $row->addTextfield('status')
-            ->readOnly();
+    $col = $form->addRow()->addClass('eventInfo')->addColumn();
+        $col->addLabel('dates', __('Event Dates'));
+        $requestDaysGateway = $container->get(RequestDaysGateway::class);
+        $dayCriteria = $requestDaysGateway->newQueryCriteria()
+            ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID);
+
+        $table = DataTable::create('dateTime');
+        $table->addColumn('date', __('Date'))
+            ->format(Format::using('date', ['date']));
+
+        $col->addContent($table->render($requestDaysGateway->queryRequestDays($dayCriteria)));
+        
 
     $row = $form->addRow();
         $row->addHeading(__('Further Information'));
@@ -262,62 +276,42 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
 
     $row = $form->addRow()->addClass('furtherInfo');
         $col = $row->addColumn();
-            $col->addLabel('personalRationalLabel', Format::bold(__('PERSONAL RATIONAL')));
-            $col->addContent($pdRequest['personalRational']);
+            $col->addLabel('personalRationalLabel', __('Personal Rational'));
+            $col->addTextArea('personalRational')->setValue($pdRequest['personalRational'])->setRows(4)->readonly();
 
     $row = $form->addRow()->addClass('furtherInfo');
         $col = $row->addColumn();
-            $col->addLabel('departmentImpactLabel', Format::bold(__('DEPARTMENTAL AND SCHOOL IMPACT')));
-            $col->addContent($pdRequest['departmentImpact']);
+            $col->addLabel('departmentImpactLabel', __('Departmental and School Impact'));
+            $col->addTextArea('departmentImpact')->setValue($pdRequest['departmentImpact'])->setRows(4)->readonly();
 
     $row = $form->addRow()->addClass('furtherInfo');
         $col = $row->addColumn();
-            $col->addLabel('schoolSharingLabel', Format::bold(__('SCHOOL SHARING')));
-            $col->addContent($pdRequest['schoolSharing']);
+            $col->addLabel('schoolSharingLabel', __('School Sharing'));
+            $col->addTextArea('schoolSharing')->setValue($pdRequest['schoolSharing'])->setRows(4)->readonly();
 
     $row = $form->addRow()->addClass('furtherInfo');
         $row->addLabel('supportingEvidenceLabel', __m('Supporting Evidence (If applicable)'))->description(__m('Please upload any supporting evidence that you think might be useful in assessing your application'));
         $row->addFileUpload('supportingEvidence')
-            ->setAttachment('supportingEvidence', $gibbon->session->get('absoluteURL'), $pdRequest['supportingEvidence']);
+            ->setAttachment('supportingEvidence', $session->get('absoluteURL'), $pdRequest['supportingEvidence']);
 
     $row = $form->addRow()->addClass('furtherInfo');
         $col = $row->addColumn();
-            $col->addLabel('notesLabel', Format::bold(__('Comments/Notes')));
-            $col->addContent($pdRequest['notes']);
-
-    $row = $form->addRow();
-        $row->addHeading(__('Date'));
-        toggleSection($row, 'dateTime', $on);
-
-    $row = $form->addRow()->addClass('dateTime');
-
-        $requestDaysGateway = $container->get(RequestDaysGateway::class);
-        $dayCriteria = $requestDaysGateway->newQueryCriteria()
-            ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID);
-
-        $table = DataTable::create('dateTime');
-
-        $table->addColumn('startDate', __('Start Date'))
-            ->format(Format::using('date', ['startDate']));
-        $table->addColumn('endDate', __('End Date'))
-            ->format(Format::using('date', ['endDate']));
-
-        $row->addContent($table->render($requestDaysGateway->queryRequestDays($dayCriteria)));
+            $col->addLabel('notesLabel', __('Comments/Notes'));
+            $col->addTextArea('notes')->setValue($pdRequest['notes'])->setRows(4)->readonly();
 
     $row = $form->addRow();
         $row->addHeading(__('Participants'));
         toggleSection($row, 'participants', $on);
 
+    $requestPersonGateway = $container->get(RequestPersonGateway::class);
+    $peopleCriteria = $requestPersonGateway->newQueryCriteria()
+        ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
+        ->sortBy(['surname', 'preferredName'])
+        ->pageSize(0);
+    $participants = $requestPersonGateway->queryRequestPeople($peopleCriteria);
+
+
     $row = $form->addRow()->addClass('participants');
-        $col = $row->addColumn();
-            $col->addLabel('teacherLabel', Format::bold(__('Teachers/Staff')));
-
-            $requestPersonGateway = $container->get(RequestPersonGateway::class);
-            $peopleCriteria = $requestPersonGateway->newQueryCriteria()
-                ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
-                ->sortBy(['surname', 'preferredName'])
-                ->pageSize(0);
-
             $gridRenderer = new GridView($container->get('twig'));
             $table = $container->get(DataTable::class)->setRenderer($gridRenderer);
 
@@ -331,7 +325,10 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
                 ->setClass('text-xs font-bold mt-1')
                 ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, false]));
 
-            $col->addContent($table->render($requestPersonGateway->queryRequestPeople($peopleCriteria)));
+            $table->addColumn('role')
+                ->setClass('text-xxs');
+
+            $row->addContent($table->render($participants));
 
     $row = $form->addRow();
         $row->addHeading(__('Cost Breakdown'));
@@ -344,13 +341,18 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
             ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID);
         $requestCosts = $requestCostGateway->queryRequestCost($costCriteria);
 
-        $totalCost = array_sum($requestCosts->getColumn('cost'));
+        $totalCost = array_reduce($requestCosts->toArray(), function ($group, $item) {
+            $group += floatval($item['cost']) * floatval($item['quantity']);
+            return $group;
+        }, 0);
 
         $table = DataTable::create('costBreakdown');
 
         $table->addColumn('title', __('Cost Name'));
 
         $table->addColumn('description', __('Cost Description'));
+
+        $table->addColumn('quantity', __('Quantity'));
 
         $table->addColumn('cost', __('Cost'))
             ->format(Format::using('currency', ['cost']));
@@ -359,7 +361,7 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
 
     $row = $form->addRow()->addClass('costBreakdown');
         $row->addLabel('totalCostLabel', Format::bold(__('Total Cost')));
-        $row->addTextfield('totalCost')
+        $row->addTextField('totalCost')
             ->setValue(Format::currency($totalCost))
             ->readOnly();
 
@@ -372,7 +374,7 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
         $row = $form->addRow()->addClass('logs');
 
         $requestLogGateway = $container->get(RequestLogGateway::class);
-        $logCiteria = $requestLogGateway->newQueryCriteria()
+        $logCriteria = $requestLogGateway->newQueryCriteria()
             ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
             ->sortBy(['timestamp']);
 
@@ -396,7 +398,7 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
 
         $table->addColumn('requestStatus', __('Event'));
 
-        $row->addContent($table->render($requestLogGateway->queryRequestLogs($logCiteria)));
+        $row->addContent($table->render($requestLogGateway->queryRequestLogs($logCriteria)));
     }
 
     if ($approveMode) {
@@ -409,8 +411,8 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
     if (!$readOnly) {
         $row = $form->addRow();
             $col = $row->addColumn();
-                $col->addLabel('commentLabel', __('Comment'));
-                $col->addTextarea('comment');
+                $col->addLabel('comment', __('Comment'));
+                $col->addTextarea('comment')->required();
 
         $row = $form->addRow();
             $row->addSubmit();
@@ -450,7 +452,7 @@ function getSettings(ContainerInterface $container, $guid) {
             $row->addSelect($data['name'])
                 ->fromArray($requestApprovalOptions)
                 ->selected($data['value'])
-                ->setRequired(true);
+                ->required();
         })
         ->setProcessor(function ($data) use ($requestApprovalOptions) {
             return in_array($data, $requestApprovalOptions) ? $data : false;
@@ -462,21 +464,7 @@ function getSettings(ContainerInterface $container, $guid) {
                 ->checked(boolval($data['value']));
         })
         ->setProcessor(function ($data) use ($requestsGateway) {
-            $enabled = $data !== null;
-
-            if (!$enabled) {
-
-                $success = $requestsGateway->updateWhere(
-                    ['status' => 'Awaiting Final Approval'],
-                    ['status' => 'Approved']
-                );
-
-                if (!$success) {
-                    return false;
-                }
-            }
-
-            return $enabled ? 1 : 0;
+            return $data !== null ? 1 : 0;
         });
 
     $settingFactory->addSetting('expiredUnapprovedFilter')
@@ -486,6 +474,92 @@ function getSettings(ContainerInterface $container, $guid) {
         })
         ->setProcessor(function ($data) {
             return $data === null ? 0 : 1;
+        });
+
+    $settingFactory->addSetting('eventTypes')
+        ->setRenderer(function ($data, $row) {
+            $row->addTextArea($data['name'])
+                ->setRows(2)
+                ->required()
+                ->setValue($data['value'] ?? '');
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
+        });
+    $settingFactory->addSetting('areasOfFocus')
+        ->setRenderer(function ($data, $row) {
+            $row->addTextArea($data['name'])
+                ->setRows(2)
+                ->required()
+                ->setValue($data['value'] ?? '');
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
+        });
+    
+
+    $settingFactory->addSetting('participantsBlurb')
+        ->setRow(false)
+        ->setRenderer(function ($data, $row) use ($guid) {
+            $row->addEditor($data['name'], $guid)
+                ->setRows(4)
+                ->setValue($data['value'] ?? '');
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
+        });
+
+    $settingFactory->addSetting('participantRoles')
+        ->setRenderer(function ($data, $row) {
+            $row->addTextArea($data['name'])
+                ->setRows(2)
+                ->required()
+                ->setValue($data['value'] ?? '');
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
+        });
+
+    $settingFactory->addSetting('expensesBlurb')
+        ->setRow(false)
+        ->setRenderer(function ($data, $row) use ($guid) {
+            $row->addEditor($data['name'], $guid)
+                ->setRows(4)
+                ->setValue($data['value'] ?? '');
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
+        });
+
+    $settingFactory->addSetting('expenseOptions')
+        ->setRenderer(function ($data, $row) {
+            $row->addTextArea($data['name'])
+                ->setRows(2)
+                ->required()
+                ->setValue($data['value'] ?? '');
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
+        });
+
+    $settingFactory->addSetting('agreementDescription')
+        ->setRow(false)
+        ->setRenderer(function ($data, $row) use ($guid) {
+            $row->addEditor($data['name'], $guid)
+                ->setValue($data['value'] ?? '');
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
+        });
+
+    $settingFactory->addSetting('agreementAcknowledgment')
+        ->setRenderer(function ($data, $row) {
+            $row->addTextArea($data['name'])
+                ->setRows(2)
+                ->setValue($data['value'] ?? '');
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
         });
 
     return $settingFactory->getSettings();

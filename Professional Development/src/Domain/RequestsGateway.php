@@ -35,7 +35,7 @@ class RequestsGateway extends QueryableGateway
         'gibbonPerson.title',
         'gibbonPerson.preferredName',
         'gibbonPerson.surname',
-        '(SELECT startDate FROM professionalDevelopmentRequestDays WHERE professionalDevelopmentRequestID = professionalDevelopmentRequests.professionalDevelopmentRequestID ORDER BY startDate ASC LIMIT 1) as firstDayOfTrip',
+        '(SELECT date FROM professionalDevelopmentRequestDays WHERE professionalDevelopmentRequestID = professionalDevelopmentRequests.professionalDevelopmentRequestID ORDER BY date ASC LIMIT 1) as firstDayOfTrip',
         ])
         ->leftJoin('professionalDevelopmentRequestPerson', "professionalDevelopmentRequestPerson.professionalDevelopmentRequestID = professionalDevelopmentRequests.professionalDevelopmentRequestID AND professionalDevelopmentRequestPerson.gibbonPersonID = :gibbonPersonID")
         ->where('gibbonSchoolYearID=:gibbonSchoolYearID')
@@ -44,7 +44,7 @@ class RequestsGateway extends QueryableGateway
 
         if ($expiredUnapproved) {
             $query->where("NOT (
-                (SELECT IFNULL(MAX(endDate),'0000-00-00') FROM professionalDevelopmentRequestDays WHERE professionalDevelopmentRequestID = professionalDevelopmentRequests.professionalDevelopmentRequestID) < CURRENT_DATE 
+                (SELECT IFNULL(MAX(date),'0000-00-00') FROM professionalDevelopmentRequestDays WHERE professionalDevelopmentRequestID = professionalDevelopmentRequests.professionalDevelopmentRequestID) < CURRENT_DATE 
                 AND (professionalDevelopmentRequests.status = 'Requested' OR professionalDevelopmentRequests.status = 'Awaiting Final Approval')
                 )");
         }
@@ -68,7 +68,7 @@ class RequestsGateway extends QueryableGateway
             'showActive' => function($query, $expiredUnapproved) {
                 if ($expiredUnapproved == 'Y' ) {
                     $query->where("NOT (
-                        (SELECT IFNULL(MAX(endDate),'0000-00-00') FROM professionalDevelopmentRequestDays WHERE professionalDevelopmentRequestID = professionalDevelopmentRequests.professionalDevelopmentRequestID) < CURRENT_DATE 
+                        (SELECT IFNULL(MAX(date),'0000-00-00') FROM professionalDevelopmentRequestDays WHERE professionalDevelopmentRequestID = professionalDevelopmentRequests.professionalDevelopmentRequestID) < CURRENT_DATE 
                         AND (professionalDevelopmentRequests.status = 'Cancelled' OR professionalDevelopmentRequests.status = 'Rejected')
                         )");
                 }
@@ -99,8 +99,7 @@ class RequestsGateway extends QueryableGateway
 
             'tripDay' => function($query, $queryDate) {
                 return $query->innerJoin('professionalDevelopmentRequestDays','professionalDevelopmentRequestDays.professionalDevelopmentRequestID = professionalDevelopmentRequests.professionalDevelopmentRequestID')
-                    ->where('professionalDevelopmentRequestDays.startDate <= :queryDate')
-                    ->where('professionalDevelopmentRequestDays.endDate >= :queryDate')
+                    ->where('professionalDevelopmentRequestDays.date = :queryDate')
                     ->bindValue('queryDate',$queryDate);
             },
         ]);

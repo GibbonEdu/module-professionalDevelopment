@@ -25,10 +25,10 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestLogGateway;
 require_once __DIR__ . '/moduleFunctions.php';
 
 $page->breadcrumbs
-        ->add(__('Manage Professional Development Requests'), 'requests_manage.php')
+        ->add(__('Manage Professional Development Requests'), 'pd_manage.php')
         ->add(__('Approve Request'));
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_manage.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manage.php')) {
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {

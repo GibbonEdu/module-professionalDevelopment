@@ -22,7 +22,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use Gibbon\Forms\Prefab\DeleteForm;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
 
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_deleteApproverProcess.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_deleteApproverProcess.php')) {
     //Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
@@ -33,7 +33,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     if (empty($professionalDevelopmentRequestApproversID) || !$requestApproversGateway->exists($professionalDevelopmentRequestApproversID)) {
         $page->addError(__('Invalid Approver.'));
     } else {
-        $form = DeleteForm::createForm($session->get('absoluteURL') . '/modules/' . $session->get('module') . "/requests_deleteApproverProcess.php");
+        $form = DeleteForm::createForm($session->get('absoluteURL') . '/modules/' . $session->get('module') . "/pd_deleteApproverProcess.php");
         $form->addHiddenValue('address', $session->get('address'));
         $form->addHiddenValue('professionalDevelopmentRequestApproversID', $professionalDevelopmentRequestApproversID);
 

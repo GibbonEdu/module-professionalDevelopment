@@ -26,10 +26,9 @@ use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
 
+$page->breadcrumbs->add(__("Today's PD"));
 
-$page->breadcrumbs->add(__('Today\'s Requests'));
-
-if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/requests_reportToday.php')) {
+if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_reportToday.php')) {
     $page->addError(__('You do not have access to this action.'));
 } else {
     $moduleName = $session->get('module');
@@ -41,7 +40,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $form->setTitle(__('Filter'));
     $form->setClass('noIntBorder fullWidth');
 
-    $form->addHiddenValue('q', '/modules/Professional Development/requests_reportToday.php');
+    $form->addHiddenValue('q', '/modules/Professional Development/pd_reportToday.php');
 
     $row = $form->addRow();
         $row->addLabel('date', __('Date'));
@@ -67,7 +66,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $requests = $requestsGateway->queryRequests($criteria, $session->get('gibbonSchoolYearID'));
 
     $table = DataTable::createPaginated('todaysTrips', $criteria);
-    $table->setTitle(__("Today's Trips"));
+    $table->setTitle(__("Today's PD"));
   
     $table->addExpandableColumn('description')
         ->format(function ($requests) {
@@ -90,7 +89,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         ->addParam('professionalDevelopmentRequestID')
         ->format(function ($requests, $actions) use ($moduleName) {
             $actions->addAction('view', __('View'))
-                ->setURL('/modules/' . $moduleName . '/requests_View.php');
+                ->setURL('/modules/' . $moduleName . '/pd_View.php');
         });
 
     echo $table->render($requests);
