@@ -163,7 +163,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $dateBlocks = $col->addCustomBlocks('dateTime', $session)
             ->fromTemplate($dateTimeBlock)
             ->settings([
-                'placeholder' => '',
+                'placeholder' => __m('Add the event dates here...'),
                 'sortable' => true,
                 'orderName' => 'dateTimeOrder'
             ])

@@ -105,6 +105,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     foreach ($requestData as $key => $required) {
         $requestData[$key] = $_POST[$key] ?? '';
 
+        if ($key == 'eventFocus' && $requestData[$key] == 'Other') {
+            $requestData[$key] = $_POST['eventFocusOther'] ?? '';
+        }
+
         if ($required && empty($requestData[$key])) {
             $partialFail = true;
             $returnCode = 'warning3';

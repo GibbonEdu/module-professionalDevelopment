@@ -110,7 +110,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $criteria = $requestsGateway->newQueryCriteria(true)
         ->searchBy($requestsGateway->getSearchableColumns(), $search)
         ->sortBy('firstDayOfTrip', 'DESC')
-        ->filterBy('showActive', $highestAction == 'Manage Applications_full' ? 'Y' : '')
         ->fromPOST();
 
     $gibbonPersonIDFilter = $highestAction == 'Manage Applications_full' ? null : $gibbonPersonID;
@@ -144,8 +143,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $filters['status:' . $status] = __('Status') . ': ' . __($status);
         return $filters;
     });
-
-    $filters['showActive:Y'] = __m('Upcoming / Approved');
     
     $table->addMetaData('post', ['gibbonSchoolYearID' => $gibbonSchoolYearID]);
     $table->addMetaData('filterOptions', $filters);

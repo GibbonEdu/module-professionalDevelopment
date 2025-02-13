@@ -42,13 +42,6 @@ class RequestsGateway extends QueryableGateway
         ->bindValue('gibbonSchoolYearID', $gibbonSchoolYearID)
         ->bindValue('gibbonPersonID', $gibbonPersonID);
 
-        if ($expiredUnapproved) {
-            $query->where("NOT (
-                (SELECT IFNULL(MAX(date),'0000-00-00') FROM professionalDevelopmentRequestDays WHERE professionalDevelopmentRequestID = professionalDevelopmentRequests.professionalDevelopmentRequestID) < CURRENT_DATE 
-                AND (professionalDevelopmentRequests.status = 'Requested' OR professionalDevelopmentRequests.status = 'Awaiting Final Approval')
-                )");
-        }
-
          // A user has been specified, so Filter only my requests and involved trips for this user
          if (!empty($gibbonPersonID)) {
             $query->where('(professionalDevelopmentRequests.gibbonPersonIDCreated = :gibbonPersonID OR professionalDevelopmentRequestPerson.professionalDevelopmentRequestPersonID IS NOT NULL)');
