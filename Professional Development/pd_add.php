@@ -30,13 +30,13 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestPersonGateway;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
-//Checking if editing mode should be enabled
+// Checking if editing mode is enabled
 $edit = false;
 
 $mode = $_REQUEST['mode'] ?? '';
 $professionalDevelopmentRequestID = $_REQUEST['professionalDevelopmentRequestID'] ?? '';
 
-//Check if a mode and Request ID are given
+// Check if a mode and Request ID are given
 if (!empty($mode) && !empty($professionalDevelopmentRequestID)) {
     //Get PD request from gateway
     $requestsGateway = $container->get(RequestsGateway::class);
@@ -76,7 +76,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $expensesBlurb = $settingGateway->getSettingByScope('Professional Development', 'expensesBlurb');
     $expenseOptions = $settingGateway->getSettingByScope('Professional Development', 'expenseOptions');
 
-    //Return Messages
+    // Return Messages
     $page->return->addReturns([
         'warning3' => __('Your request was successful, but some required fields were missing. Please update your request data.'),
         'warning4' => __('Your request was successful, but there are no dates set for this request. Please add dates and update your request.'),
@@ -88,7 +88,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
       $page->return->setEditLink($session->get('absoluteURL').'/index.php?q=/modules/Professional Development/pd_view.php&professionalDevelopmentRequestID='.$professionalDevelopmentRequestID);
    }
 
-   //Submit Request Form
+   // Submit Request Form
    $form = Form::create('requestForm', $session->get('absoluteURL').'/modules/'.$moduleName.'/pd_addProcess.php');
 
    $form->setFactory(DatabaseFormFactory::create($pdo));
@@ -99,7 +99,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
    if ($edit) $form->removeMeta()->addMeta()->addDefaultContent('editProcess');
 
-   //Basic Information Section
+   // Basic Information Section
    $row = $form->addRow();
         $row->addHeading('Basic Information');
 
@@ -122,21 +122,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         ->required()
         ->placeholder()
         ->selected($session->get('gibbonPersonID'))
-        ->readOnly($highestAddAction != 'New Application_all');
-
-    // $row = $form->addRow();
-    //     $row->addLabel('attendeeRole', __('Participant(s) Role'))->description(__('Are you presenting or an attendee?'));
-    //     $row->addSelect('attendeeRole')->fromArray(['Attendee' => __('Attendee'), 'Presenting' => __('Presenting'), 'Both' => __('Both')])->required();
-
-    
-
-    //Cover Amount
-    // $options = getCoverAmountArray();
-    // $row = $form->addRow();
-    //     $row->addLabel('coverAmount', __('Cover Amount'))->description(__('Cover Required: If "yes", please provide an estimate of the amount of cover required. Please tick all that apply'));
-    //     $row->addCheckbox('coverAmount')
-    //         ->fromArray($options)
-    //         ->addClass('md:max-w-md');
+        ->readOnly($highestAddAction != 'New Application_all');   
 
     $row = $form->addRow();
         $row->addHeading('Conference/Event Details', __('Conference/Event Details'));
@@ -156,7 +142,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $col->addLabel('eventDescription', __m('Event Description'));
         $col->addTextArea('eventDescription')->setRows(3)->required();
 
-    //Template for Date Block
+    // Template for Date Block
     $dateTimeBlock = $form->getFactory()->createTable()->setClass('blank');
 
     $row = $dateTimeBlock->addRow();
@@ -170,8 +156,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $addDateTimeBlockButton = $form->getFactory()->createButton(__('Add Date'))->addClass('addBlock');
     
-    //Creating Custom Blocks using the template of Date Block
-    
+    // Creating Custom Blocks using the template of Date Block
     $row = $form->addRow();
         $col = $row->addColumn();
         $col->addLabel('dateTime', 'Event Dates');
@@ -184,11 +169,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             ])
             ->addToolInput($addDateTimeBlockButton);
 
-    //Participants section
+    // Participants section
     $row = $form->addRow();
     $row->addHeading(__('Participants'))->append($participantsBlurb);
 
-    //Template for participant Blocks
+    // Template for participant Blocks
     $participantBlock = $form->getFactory()->createTable()->setClass('blank');
     $row = $participantBlock->addRow()->addClass('w-full flex justify-between items-center mt-1 ml-2');
     $row->addSelectStaff('gibbonPersonID')->photo(false)
@@ -200,10 +185,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         ->fromString($participantRoles)
         ->setClass('flex-1 mr-1');
 
-    //Tool Button
+    // Tool Button
     $addParticipantBlockButton = $form->getFactory()->createButton(__('Add Participant'))->addClass('addBlock');
 
-    //Custom Blocks for participants
+    // Custom Blocks for participants
     $row = $form->addRow();
     $participantBlocks = $row->addCustomBlocks('participant', $session)
     ->fromTemplate($participantBlock)
@@ -214,10 +199,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         ])
     ->addToolInput($addParticipantBlockButton);
 
-    //Cost Section
+    // Cost Section
     $row = $form->addRow()->addHeading(__('Expenses'))->append($expensesBlurb);
 
-    //Template for Cost Block
+    // Template for Cost Block
     $costBlock = $form->getFactory()->createTable()->setClass('blank');
         $row = $costBlock->addRow();
             // $row->addLabel('title', __('Type'));
@@ -240,19 +225,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                 ->minimum(0)
                 ->append("<input type='hidden' id='professionalDevelopmentRequestCostID' name='professionalDevelopmentRequestCostID' value=''/>");
 
-        $row = $costBlock->addRow()->addClass('showHide w-full');
+        $row = $costBlock->addRow();
             $col = $row->addColumn();
                 $col->addTextArea('description')
                     ->setRows(2)
                     ->setClass('w-full mt-2')
                     ->placeholder(__('Expense Description'));
       
-        //Tool Button
+        // Tool Button
         $addCostBlockButton = $form->getFactory()
             ->createButton(__("Add Expense"))
             ->addClass('addBlock');
     
-        //Custom Blocks for Cost
+        // Custom Blocks for Cost
         $row = $form->addRow();
             $costBlocks = $row->addCustomBlocks("cost", $session)
                 ->fromTemplate($costBlock)
@@ -261,12 +246,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                     'sortable' => true,
                     'orderName' => 'costOrder'
                 ])
-                ->addBlockButton('showHide', 'Show/Hide', 'plus.png')
                 ->addToolInput($addCostBlockButton);
-    
-    
 
-    //Further Information Section
+    // Further Information Section
     $row = $form->addRow();
         $row->addHeading('Further Information');
 
@@ -298,22 +280,22 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $row->addTextArea('notes')->setRows(3);
 
     if ($edit) {
-        //Add parameters for editing
+        // Add parameters for editing
         $form->addHiddenValue('mode', 'edit');
         $form->addHiddenValue('professionalDevelopmentRequestID', $professionalDevelopmentRequestID);
 
-        //Add view Header
+        // Add view Header
         $form->addHeaderAction('view', __('View'))
             ->setURL('/modules/' . $moduleName . '/pd_view.php')
             ->addParam('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
             ->displayLabel();
         
-        //Load values into form
+        // Load values into form
         $pdRequest['coverAmount'] = json_decode($pdRequest['coverAmount'], true);
 
         $form->loadAllValuesFrom($pdRequest);
 
-         //Get Cost Data and add to CostBlocks
+         // Get Cost Data and add to CostBlocks
          $requestCostGateway = $container->get(RequestCostGateway::class);
          $costCriteria = $requestCostGateway->newQueryCriteria()
              ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
@@ -331,7 +313,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             ]);
          }
 
-         //Get Days Data and add to DateBlocks
+         // Get Days Data and add to DateBlocks
         $requestDaysGateway = $container->get(RequestDaysGateway::class);
         $daysCriteria = $requestDaysGateway->newQueryCriteria()
             ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
@@ -346,7 +328,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             ]);
         }
         
-        //Get People Data and add to DataBlocks
+        // Get People Data and add to DataBlocks
         $requestPersonGateway = $container->get(RequestPersonGateway::class);
         $requestPersonCriteria = $requestPersonGateway->newQueryCriteria()
         ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID);
@@ -383,8 +365,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $row->addLabel('agreement', $agreementAcknowledgment)->addClass('flex-grow');
         $row->addCheckbox('agreement')->description(__('Yes'))->required()->addClass('flex-1');
     }
-
-   
     
     $row = $form->addRow('stickySubmit');
     if (!$edit || $isDraft) {
