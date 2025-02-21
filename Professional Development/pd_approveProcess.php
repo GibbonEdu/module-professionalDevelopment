@@ -163,7 +163,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                         $requestStatus .= ' - Partial';
                         $nextApprover = $nextApprover->fetch();
 
-                        $notificationSender->addNotification($nextApprover['gibbonPersonID'], __('A Professional Development request is awaiting your approval.'), $moduleName, $absoluteURL . '/index.php?q=/modules/' . $moduleName . '/pd_approve.php&professionalDevelopmentRequestID='. $professionalDevelopmentRequestID);
+                        $notificationSender->addNotification($nextApprover['gibbonPersonID'], __('A Professional Development request is awaiting your approval.'), $moduleName, '/index.php?q=/modules/'.$moduleName.'/pd_approve.php&professionalDevelopmentRequestID='. $professionalDevelopmentRequestID);
 
                         if ($owner != $gibbonPersonID) {
                             $notificationSender->addNotification($owner, __('Your PD request has been partially approved by {person} and is awaiting final approval.', ['person' => $personName]).$commentText, $moduleName, $notificationURL);
