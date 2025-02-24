@@ -25,11 +25,11 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestLogGateway;
 require_once __DIR__ . '/moduleFunctions.php';
 
 $page->breadcrumbs
-        ->add(__('Manage Professional Development Requests'), 'pd_manage.php')
-        ->add(__('Approve Request'));
+    ->add(__('Manage Professional Development Requests'), 'pd_manage.php')
+    ->add(__('Approve Request'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manage.php')) {
-    //Acess denied
+    // Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
     $gibbonPersonID = $session->get('gibbonPersonID');
@@ -44,7 +44,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     } else if ($request['gibbonPersonIDCreated'] == $session->get('gibbonPersonID')) {
         $page->addError(__('A request cannot be approved by the same person who created it.'));
     } else {
-
         $approval = $container->get(RequestLogGateway::class)->selectBy([
             'professionalDevelopmentRequestID' => $request['professionalDevelopmentRequestID'],
             'gibbonPersonID' => $gibbonPersonID,
@@ -54,11 +53,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         if (needsApproval($container, $gibbonPersonID, $professionalDevelopmentRequestID)) {
             renderRequest($container, $professionalDevelopmentRequestID, true);
         } else if ($approval->isNotEmpty()) {
-            $page->addMessage(__('You have already approved this trip, it is currently pending additional approval from other users.'));
+            $page->addMessage(__('You have already approved this trip, it is currently awaiting Head approval.'));
             renderRequest($container, $professionalDevelopmentRequestID, false);
-        } else if ($request['status'] == 'Rejected'){
+        } else if ($request['status'] == 'Rejected') {
             $page->addMessage(__('This trip has been rejected. No further edits or approval can be made to it.'));
-        } elseif ($request['status'] != 'Approved'){
+        } else if ($request['status'] != 'Approved') {
             $page->addError(__('You do not have access to this action.'));
         }
     }

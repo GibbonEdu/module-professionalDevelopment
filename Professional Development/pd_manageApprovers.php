@@ -29,10 +29,9 @@ require_once __DIR__ . '/moduleFunctions.php';
 $page->breadcrumbs->add(__('Manage Approvers'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manageApprovers.php')) {
-    //Acess denied
+    // Acess denied
     $page->addError(__('You do not have access to this action.'));
 } else {
-
     $moduleName = $session->get('module');
     $settingGateway = $container->get(SettingGateway::class);
     $requestApproversGateway = $container->get(RequestApproversGateway::class);
@@ -88,7 +87,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                 $actions->addAction('edit', __('Edit'))
                         ->setURL('/modules/' . $moduleName . '/pd_editApprover.php')
                         ->modalWindow();
-                
                 
                 $actions->addAction('delete', __('Delete'))
                         ->setURL('/modules/' . $moduleName . '/pd_deleteApprover.php');
