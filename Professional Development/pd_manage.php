@@ -20,13 +20,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 use Gibbon\Forms\Form;
-use Gibbon\Domain\DataSet;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
 use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Departments\DepartmentGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
+use Gibbon\Module\ProfessionalDevelopment\Domain\RequestPersonGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
 
 // Module includes
@@ -52,14 +52,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $gibbonDepartmentID = $_POST['gibbonDepartmentID'] ?? []; 
     $search = $_POST['search'] ?? ''; 
 
-    //Settings
+    // Settings
     $settingGateway = $container->get(SettingGateway::class);
 
     $requestApprovalType = $settingGateway->getSettingByScope('Professional Development', 'requestApprovalType');
     $headApproval = $settingGateway->getSettingByScope('Professional Development', 'headApproval');
     $expiredUnapproved = $settingGateway->getSettingByScope('Professional Development', 'expiredUnapprovedFilter');
 
-    //Permissions
+    // Permissions
     $requestApproversGateway = $container->get(RequestApproversGateway::class);
 
     $approver = $requestApproversGateway->selectApproverByPerson($gibbonPersonID);
@@ -70,7 +70,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     // SEARCH
     if ($highestAction == 'Manage Applications_full') {
-        //Department Data
+        // Department Data
         $departmentGateway = $container->get(DepartmentGateway::class);
         $departmentsList = $departmentGateway->selectDepartmentsByPerson($gibbonPersonID, 'Coordinator');
         
@@ -79,7 +79,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             return $group;
         }, []);
 
-        //Filter Form
+        // Filter Form
         $form = Form::create('requestFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
         $form->setFactory(DatabaseFormFactory::create($pdo));
         $form->setTitle(__('Filter'));
@@ -104,8 +104,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         echo $form->getOutput(); 
     }
 
-    //Professional Development Request Data
-
+    // Professional Development Request Data
     $requestsGateway = $container->get(RequestsGateway::class);
     $criteria = $requestsGateway->newQueryCriteria(true)
         ->searchBy($requestsGateway->getSearchableColumns(), $search)
@@ -125,8 +124,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         }
     });
 
-    //Requests Table
-
+    // Requests Table
     $table = DataTable::createPaginated('requests', $criteria);
     $table->setTitle($highestAction == 'Manage Applications_full' ? __('All Applications') : __('My Applications'));
 
@@ -165,7 +163,7 @@ $table->addColumn('owner', __('Owner'))
     ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]))
     ->sortable('surname');
 
-$table->addColumn('firstDayOfTrip', __('First Day of Trip'))
+$table->addColumn('firstDayOfTrip', __('First Day'))
     ->format(Format::using('dateReadable', ['firstDayOfTrip']));
 
 $table->addColumn('status', __('Status'))->format(function($request) {
@@ -176,6 +174,42 @@ $table->addColumn('status', __('Status'))->format(function($request) {
 
     return $output;
 });
+
+$table->addColumn('expenseSubmission', __('Expenses'))
+    ->format(function ($request) use ($container) {
+        $requestPersonGateway = $container->get(RequestPersonGateway::class);
+        $peopleCriteria = $requestPersonGateway->newQueryCriteria()
+            ->filterBy('professionalDevelopmentRequestID', $request['professionalDevelopmentRequestID'])
+            ->sortBy(['surname', 'preferredName'])
+            ->pageSize(0);
+        $participants = $requestPersonGateway->queryRequestPeople($peopleCriteria);
+
+        $status = __('Not required');
+        $tag = 'dull';
+
+        if ($request['expenseRequest'] == 'Individual') {
+            $status = __('Submitted');
+            $tag = 'message';
+            foreach ($participants as $participant) {
+                if (empty($participant['gibbonFinanceExpenseID'])) {
+                    $status = __('Pending');
+                    $tag = 'warning';
+                    break;
+                }
+            }
+        } elseif ($request['expenseRequest'] == 'Group Leader') {
+            $status = __('Pending');
+            $tag = 'warning';
+            foreach ($participants as $participant) {
+                if ($participant['gibbonPersonID'] == $request['gibbonPersonIDCreated'] && !empty($participant['gibbonFinanceExpenseID'])) {
+                    $status = __('Submitted');
+                    $tag = 'message';
+                    break;
+                }
+            }
+        }
+        return Format::tag($status, $tag);
+    });
 
 $table->addActionColumn()
         ->addParam('professionalDevelopmentRequestID')
@@ -191,6 +225,32 @@ $table->addActionColumn()
             $actions->addAction('view', __('View Details'))
                 ->setURL('/modules/Professional Development/pd_view.php');
 
+            $newPDExpenseParams = ['professionalDevelopmentRequestID' => $request['professionalDevelopmentRequestID'], 'title' => 'Professional Development - '. $request['eventTitle'], 'eventDescription' => $request['eventDescription'], 'expenseRequest' => $request['expenseRequest']];
+
+            $requestPersonGateway = $container->get(RequestPersonGateway::class);
+            $peopleCriteria = $requestPersonGateway->newQueryCriteria()
+                ->filterBy('professionalDevelopmentRequestID', $request['professionalDevelopmentRequestID'])
+                ->sortBy(['surname', 'preferredName'])
+                ->pageSize(0);
+            $participants = $requestPersonGateway->queryRequestPeople($peopleCriteria);
+
+
+            if ($request['status'] == 'Approved' ) {
+                if ($request['expenseRequest'] == 'Group Leader' && $gibbonPersonID == $request['gibbonPersonIDCreated']) {
+                $actions->addAction('add', __('Add Expense Request'))
+                    ->setIcon('payment')
+                    ->addParams($newPDExpenseParams)
+                    ->setURL('/modules/Professional Development/pd_addExpenseRequest.php')
+                    ->displayLabel();
+                } else if ($request['expenseRequest'] == 'Individual' && array_search($gibbonPersonID, array_column($participants->toArray(), 'gibbonPersonID')) !== false) {
+                $actions->addAction('add', __('Add Expense Request'))
+                    ->setIcon('payment')
+                    ->addParams($newPDExpenseParams)
+                    ->setURL('/modules/Professional Development/pd_addExpenseRequest.php')
+                    ->displayLabel();
+                }
+            }
+ 
             if (($highestAction == 'Manage Applications_full' || $gibbonPersonID == $request['gibbonPersonIDCreated']) && !in_array($request['status'], ['Cancelled', 'Rejected'])) {
                 $actions->addAction('edit', __('Edit'))
                     ->addParam('mode', 'edit')
@@ -199,5 +259,4 @@ $table->addActionColumn()
     });
 
     echo $table->render($requests);
-
 }

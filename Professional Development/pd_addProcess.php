@@ -35,11 +35,9 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
 require_once '../../gibbon.php';
 require_once  './moduleFunctions.php';
 
-//$_POST = $container->get(Validator::class)->sanitize($_POST, ['description' => 'HTML']);
-
 $URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module');
 
-//Checking if editing mode should be enabled
+// Checking if editing mode should be enabled
 $edit = false;
 
 $mode = $_REQUEST['mode'] ?? '';
@@ -48,13 +46,13 @@ $professionalDevelopmentRequestID = $_REQUEST['professionalDevelopmentRequestID'
 
 $requestsGateway = $container->get(RequestsGateway::class);
 
-//Check if a mode and id are given
+// Check if a mode and id are given
 if (!empty($mode) && !empty($professionalDevelopmentRequestID)) {
     
-    //Get the request from gateway
+    // Get the request from gateway
     $pdRequest = $requestsGateway->getByID($professionalDevelopmentRequestID);    
 
-    //If the request exists, set to edit mode
+    // If the request exists, set to edit mode
     if (!empty($pdRequest)) {
         $edit = true;
     }
@@ -85,8 +83,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $partialFail = false;
     $returnCode = '';
 
-    //Load Request Data
-    //Format: Key => Required Flag
+    // Format: Key => Required Flag
     $requestData = [
         'eventType'             => true,
         'eventFocus'            => true,
@@ -98,6 +95,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         'personalRational'      => true,
         'departmentImpact'      => true,
         'schoolSharing'         => true,
+        'expenseRequest'        => true,
         'supportingEvidence'    => false,
         'notes'                 => false,
     ];   
@@ -114,9 +112,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             $returnCode = 'warning3';
         }
     }
-
-    //Cover Amount
-    $requestData['coverAmount'] = (!empty($_POST['coverAmount'])) ? json_encode($_POST['coverAmount']) : '';
 
     // Move attached file, if there is one
     if (!empty($_FILES['supportingEvidenceFile']['tmp_name'])) {
@@ -147,10 +142,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $requestData['status'] = 'Requested';
     }
 
-    //Begin Transaction
+    // Begin Transaction
     $requestsGateway->beginTransaction();
 
-    //Insert Request Data without the date, cost and people
+    // Insert Request Data without the date, cost and people
     if ($edit) {
         if (!$requestsGateway->update($professionalDevelopmentRequestID, $requestData)) {
             $professionalDevelopmentRequestID = null;
@@ -159,7 +154,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $professionalDevelopmentRequestID = $requestsGateway->insert($requestData);
     }
 
-    //If no PD Request, rollback and return error
+    // If no PD Request, rollback and return error
     if (empty($professionalDevelopmentRequestID)) {
         $requestsGateway->rollBack();
         $URL .= '&return=error2';
@@ -167,7 +162,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         exit;
     }
 
-    //Add or edit Request Days
+    // Add or edit Request Days
     $requestDaysGateway = $container->get(RequestDaysGateway::class);
 
     $dateIDs = [];
@@ -199,10 +194,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $dateIDs[] = str_pad($professionalDevelopmentRequestDaysID, 10, '0', STR_PAD_LEFT);
     }
 
-    //Cleanup dates that have been deleted
+    // Cleanup dates that have been deleted
     $requestDaysGateway->deleteDatesNotInList($professionalDevelopmentRequestID, $dateIDs);
 
-    //Add or edit Request Cost
+    // Add or edit Request Cost
     $requestCostGateway = $container->get(RequestCostGateway::class);
 
     $costIDs = [];
@@ -236,10 +231,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $costIDs[] = str_pad($professionalDevelopmentRequestCostID, 10, '0', STR_PAD_LEFT);
     }
 
-    //Cleanup cost records that have been deleted
+    // Cleanup cost records that have been deleted
     $requestCostGateway->deleteCostsNotInList($professionalDevelopmentRequestID, $costIDs);
 
-    //Load Trip People
+    // Load People in the PD Request
     $requestPersonGateway = $container->get(RequestPersonGateway::class);
 
     $personIDs = [];
@@ -266,7 +261,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $personIDs[] = str_pad($professionalDevelopmentRequestPersonID, 10, '0', STR_PAD_LEFT);
     }
 
-     //Cleanup participant records that have been deleted
+     // Cleanup participant records that have been deleted
      $requestPersonGateway->deleteParticipantsNotInList($professionalDevelopmentRequestID, $personIDs);
 
     if ($saveMode != 'Draft') {
@@ -281,7 +276,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $requestsGateway->commit();
 
-    //Send Notifications when a request is submitted
+    // Send Notifications when a request is submitted
     if ($saveMode != 'Draft' && ($isDraft || !$edit)) {
         $notificationGateway = $container->get(NotificationGateway::class);
         $notificationSender = new NotificationSender($notificationGateway, $session);
@@ -307,11 +302,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             }
         }
 
-        //Send all notifications
+        // Send all notifications
         $event->pushNotifications($notificationGateway, $notificationSender);
 
         // Add a notification for the trip owner
-        $notificationSender->addNotification($gibbonPersonID, __('You have submitted a new PD Request (pending approval): {request}', ['request' => $requestData['eventTitle']]), 'Professional Development', '/index.php?q=/modules/Professional Development/pd_view.php&professionalDevelopmentRequestID=' . $professionalDevelopmentRequestID);
+        $notificationSender->addNotification($gibbonPersonID, __('You have submitted a new PD Request (pending approval): {request}', ['request' => $requestData['eventTitle']]), 'Professional Development', '/index.php?q=/modules/Professional Development/pd_view.php&professionalDevelopmentRequestID='.$professionalDevelopmentRequestID);
 
         $notificationSender->sendNotifications();
     }

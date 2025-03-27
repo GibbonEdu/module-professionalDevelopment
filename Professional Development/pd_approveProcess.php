@@ -46,7 +46,7 @@ $isApprover = !empty($approver);
 $finalApprover = $isApprover ? $approver['finalApprover'] : false;
 
 if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manage.php') || !$isApprover) {
-    //Acess denied
+    // Access denied
     $URL .= '/pd_manage.php&return=error0';
     header("Location: {$URL}");
     exit();
@@ -141,7 +141,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                         }
 
                         if ($status == 'Approved') {
-                            //Custom notifications for final approval
+                            // Custom notifications for final approval
                             $event = new NotificationEvent('Professional Development', 'Request Approval');
 
                             $notificationText = __('A Professional Development request has been approved by {person}: {request}', ['person' => $personName, 'request' => $pdRequest['eventTitle']]);
@@ -151,9 +151,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
                             $event->sendNotifications($pdo, $session);
 
-                            $message = __('Your request has been fully approved by {person}.', ['person' => $personName]).$commentText;
+                            if ($pdRequest['expenseRequest'] == 'Individual') {
+                                $message = __('Your PD request has been fully approved by {person}. Please ask all the participants to submit their expense request.', ['person' => $personName]).$commentText;
+                            } else {
+                                $message = __('Your PD request has been fully approved by {person}. Please submit the expense request.', ['person' => $personName]).$commentText;
+                            }
                         } else {
-                            $message = __('Your trip request has been partially approved by {person} and is awaiting final approval.', ['person' => $personName]).$commentText;
+                            $message = __('Your PD request has been partially approved by {person} and is awaiting final approval.', ['person' => $personName]).$commentText;
                         }
 
                         if ($owner != $gibbonPersonID) {

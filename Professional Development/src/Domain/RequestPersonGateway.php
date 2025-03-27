@@ -16,7 +16,7 @@ class RequestPersonGateway extends QueryableGateway
     use TableAware;
 
     private static $tableName = 'professionalDevelopmentRequestPerson'; 
-    private static $primaryKey = 'professionalDevelopmentRequestPersonID'; //The primaryKey of said table
+    private static $primaryKey = 'professionalDevelopmentRequestPersonID';
     private static $searchableColumns = [];
 
     public function queryRequestPeople(QueryCriteria $criteria) {
@@ -24,7 +24,7 @@ class RequestPersonGateway extends QueryableGateway
         ->from($this->getTableName())
         ->innerJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID = professionalDevelopmentRequestPerson.gibbonPersonID')
         ->cols([
-            'gibbonPerson.gibbonPersonID', 'professionalDevelopmentRequestPerson.professionalDevelopmentRequestPersonID', 'professionalDevelopmentRequestPerson.role', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname', 'gibbonPerson.image_240',
+            'gibbonPerson.gibbonPersonID', 'professionalDevelopmentRequestPerson.professionalDevelopmentRequestPersonID', 'professionalDevelopmentRequestPerson.role', 'professionalDevelopmentRequestPerson.gibbonFinanceExpenseID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname', 'gibbonPerson.image_240',
             'professionalDevelopmentRequestPerson.professionalDevelopmentRequestID'
         ]);
 
@@ -56,5 +56,4 @@ class RequestPersonGateway extends QueryableGateway
 
         return $this->db()->delete($sql, $data);
     }
-
 }
