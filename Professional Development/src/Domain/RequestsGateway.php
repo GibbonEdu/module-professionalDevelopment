@@ -31,6 +31,7 @@ class RequestsGateway extends QueryableGateway
         'professionalDevelopmentRequests.eventTitle as eventTitle',
         'professionalDevelopmentRequests.eventDescription',
         'professionalDevelopmentRequests.eventLocation',
+        'professionalDevelopmentRequests.expenseRequest',
         'professionalDevelopmentRequests.status',
         'gibbonPerson.title',
         'gibbonPerson.preferredName',
@@ -101,7 +102,6 @@ class RequestsGateway extends QueryableGateway
 
     }
     
-
     public function beginTransaction() {
         $this->db()->beginTransaction();
     }

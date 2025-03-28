@@ -42,7 +42,7 @@ if (!empty($mode) && !empty($professionalDevelopmentRequestID)) {
     $requestsGateway = $container->get(RequestsGateway::class);
     $pdRequest = $requestsGateway->getByID($professionalDevelopmentRequestID);    
 
-    //If the PD request exists, set to edit mode
+    // If the PD request exists, set to edit mode
     if (!empty($pdRequest)) {
         $edit = true;
     }
@@ -247,6 +247,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                     'orderName' => 'costOrder'
                 ])
                 ->addToolInput($addCostBlockButton);
+    
+        $expenseRequestOptions = ['Not Required' => 'Not Required', 'Individual' => 'Individual', 'Group Leader' => 'Group Leader'];
+        $row = $form->addRow();
+            $row->addLabel('expenseRequest', __('Expense Request Application By'))->description(__('Please advise who will be submitting the application for expense requisition to the Finance Department'));
+            $row->addSelect('expenseRequest')->fromArray($expenseRequestOptions)->required();
 
     // Further Information Section
     $row = $form->addRow();
@@ -289,10 +294,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             ->setURL('/modules/' . $moduleName . '/pd_view.php')
             ->addParam('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
             ->displayLabel();
-        
-        // Load values into form
-        $pdRequest['coverAmount'] = json_decode($pdRequest['coverAmount'], true);
-
+            
         $form->loadAllValuesFrom($pdRequest);
 
          // Get Cost Data and add to CostBlocks

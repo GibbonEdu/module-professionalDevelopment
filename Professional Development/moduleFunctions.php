@@ -23,6 +23,7 @@ use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Tables\DataTable;
 use Gibbon\Tables\View\GridView;
+use Gibbon\Domain\User\UserGateway;
 use Psr\Container\ContainerInterface;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Departments\DepartmentGateway;
@@ -33,7 +34,6 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestCostGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestDaysGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestPersonGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
-use Gibbon\Domain\User\UserGateway;
 
 function getStatuses()
 {
@@ -337,13 +337,10 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
     $table = DataTable::create('costBreakdown');
 
     $table->addColumn('title', __('Cost Name'));
-
     $table->addColumn('description', __('Cost Description'));
-
     $table->addColumn('quantity', __('Quantity'));
-
     $table->addColumn('cost', __('Cost'))
-            ->format(Format::using('currency', ['cost']));
+        ->format(Format::using('currency', ['cost']));
 
     $row->addContent($table->render($requestCosts));
 
@@ -353,8 +350,42 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
             ->setValue(Format::currency($totalCost))
             ->readOnly();
 
-    if ($showLogs) {
+    $row = $form->addRow()->addClass('costBreakdown');
+        $row->addLabel('expenseRequestLabel', __('Expense Request Application By'))
+            ->description(__('Who will submit the expense request?'));
+        $row->addTextField('expenseRequest')
+            ->setValue($pdRequest['expenseRequest'])
+            ->readonly();
+    
+    if ($pdRequest['expenseRequest'] != "Not Required") {
+        $row = $form->addRow();
+            $row->addHeading(__('Expense Request Application Details'));
+            toggleSection($row, 'expenseRequestDetails', $on);
+             
+        $row = $form->addRow()->addClass('expenseRequestDetails');
+            $table = DataTable::create('expenseRequestDetails');
+    
+        $table->addColumn('name', __('Participant'))
+            ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]));
+    
+        $table->addColumn('expenseRequestStatus', __('Expense Request Submission Status'))
+            ->format(function ($participant) {
+                return !empty($participant['gibbonFinanceExpenseID']) 
+                ? Format::tooltip(icon('solid', 'check', 'size-6 fill-current text-green-600'), __('Submitted'))
+                : Format::tooltip(icon('solid', 'cross', 'size-6 fill-current text-red-700'), __('Pending'));
+            });
 
+        if ($pdRequest['expenseRequest'] == "Individual") {
+            $row->addContent($table->render($participants));
+        } else {
+            $participant = array_filter($participants->toArray(), function($participant) use ($pdRequest) {
+                return $participant['gibbonPersonID'] == $pdRequest['gibbonPersonIDCreated'];
+            });
+            $row->addContent($table->render($participant));
+        }
+    }
+
+    if ($showLogs) {
         $row = $form->addRow();
             $row->addHeading(__('Log'));
             toggleSection($row, 'logs', $on);
@@ -556,4 +587,5 @@ function getSettings(ContainerInterface $container, $guid)
 
     return $settingFactory->getSettings();
 }
+
 ?>

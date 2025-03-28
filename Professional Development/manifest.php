@@ -27,8 +27,8 @@ $description = 'A Professional Development (PD) module for Gibbon to record Staf
 $entryURL    = "pd_manage.php";   // The landing page for the unit, used in the main menu
 $type        = "Additional";
 $category    = 'Other';
-$version     = '0.0.01';
-$author      = 'Ali';
+$version     = '0.0.02';
+$author      = 'Gibbon Foundation';
 $url         = 'https://github.com/GibbonEdu/module-professionalDevelopment';
 
 // Module tables & gibbonSettings entries
@@ -97,14 +97,6 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestApprovers` (
   `finalApprover` TINYINT(1) DEFAULT '0',
   PRIMARY KEY (`professionalDevelopmentRequestApproversID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-
-// $moduleTables[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`)
-// VALUES
-// (NULL, 'Professional Development', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a request has to go through.', 'One Of'),
-// (NULL, 'Professional Development', 'headApproval', 'Head Approval', 'A Final Approval is required before the request becomes approved.', '1'),
-// (NULL, 'Professional Development', 'expiredUnapprovedFilter', 'Disable View of Exipired Unapproved Requests', 'If selected then any request which has not been approved and has passed the initial start date will no longer be shown.', '0')
-// ";
-
 
 // Add gibbonSettings entries
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a request has to go through.', 'One Of')";
@@ -274,6 +266,3 @@ $actionRows[] = [
   'categoryPermissionParent'  => 'N', 
   'categoryPermissionOther'   => 'N', 
 ];
-
-// Hooks
-//$hooks[] = ''; // Serialised array to create hook and set options. See Hooks documentation online.
