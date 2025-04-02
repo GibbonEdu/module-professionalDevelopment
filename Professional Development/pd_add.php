@@ -248,10 +248,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                 ])
                 ->addToolInput($addCostBlockButton);
     
-        $expenseRequestOptions = ['Not Required' => 'Not Required', 'Individual' => 'Individual', 'Group Leader' => 'Group Leader'];
+        $expenseRequestOptions = ['Individual' => 'Individual', 'Group Leader' => 'Group Leader', 'Not Required' => 'Not Required'];
         $row = $form->addRow();
             $row->addLabel('expenseRequest', __('Expense Request Application By'))->description(__('Please advise who will be submitting the application for expense requisition to the Finance Department'));
-            $row->addSelect('expenseRequest')->fromArray($expenseRequestOptions)->required();
+            $row->addSelect('expenseRequest')->fromArray($expenseRequestOptions)->required()
+            ->placeholder();
 
     // Further Information Section
     $row = $form->addRow();

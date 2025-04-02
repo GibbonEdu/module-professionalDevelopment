@@ -26,7 +26,6 @@ use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Departments\DepartmentGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
-use Gibbon\Module\ProfessionalDevelopment\Domain\RequestPersonGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
 
 // Module includes
@@ -114,6 +113,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $gibbonPersonIDFilter = $highestAction == 'Manage Applications_full' ? null : $gibbonPersonID;
     $requests = $requestsGateway->queryRequests($criteria, $gibbonSchoolYearID, $gibbonPersonIDFilter, $gibbonDepartmentID, $expiredUnapproved);
 
+    // Get all the participants of a PD request
+    $requestIDs = $requests->getColumn('professionalDevelopmentRequestID');
+    $participants = $requestsGateway->selectParticipantsByRequest($requestIDs)->fetchGrouped();
+    $requests->joinColumn('professionalDevelopmentRequestID', 'participants', $participants);
+
     $requests->transform(function (&$request) use ($container, $gibbonPersonID, $checkAwaitingApproval) {
         $request['canApprove'] = 'N';
 
@@ -176,38 +180,35 @@ $table->addColumn('status', __('Status'))->format(function($request) {
 });
 
 $table->addColumn('expenseSubmission', __('Expenses'))
-    ->format(function ($request) use ($container) {
-        $requestPersonGateway = $container->get(RequestPersonGateway::class);
-        $peopleCriteria = $requestPersonGateway->newQueryCriteria()
-            ->filterBy('professionalDevelopmentRequestID', $request['professionalDevelopmentRequestID'])
-            ->sortBy(['surname', 'preferredName'])
-            ->pageSize(0);
-        $participants = $requestPersonGateway->queryRequestPeople($peopleCriteria);
-
-        $status = __('Not required');
+    ->format(function ($request) {
+        $status = __('N/A');
         $tag = 'dull';
-
+        
         if ($request['expenseRequest'] == 'Individual') {
             $status = __('Submitted');
             $tag = 'message';
-            foreach ($participants as $participant) {
+
+            foreach ($request['participants'] as $participant) {
                 if (empty($participant['gibbonFinanceExpenseID'])) {
                     $status = __('Pending');
                     $tag = 'warning';
                     break;
                 }
             }
-        } elseif ($request['expenseRequest'] == 'Group Leader') {
+        } else if ($request['expenseRequest'] == 'Group Leader') {
             $status = __('Pending');
             $tag = 'warning';
-            foreach ($participants as $participant) {
-                if ($participant['gibbonPersonID'] == $request['gibbonPersonIDCreated'] && !empty($participant['gibbonFinanceExpenseID'])) {
-                    $status = __('Submitted');
-                    $tag = 'message';
-                    break;
-                }
+
+            $groupLeaderSubmitted = array_filter($request['participants'], function ($participant) use ($request) {
+                return $participant['gibbonPersonID'] == $request['gibbonPersonIDCreated'] && !empty($participant['gibbonFinanceExpenseID']);
+            });
+
+            if (!empty($groupLeaderSubmitted)) {
+                $status = __('Submitted');
+                $tag = 'message';
             }
         }
+
         return Format::tag($status, $tag);
     });
 
@@ -227,27 +228,41 @@ $table->addActionColumn()
 
             $newPDExpenseParams = ['professionalDevelopmentRequestID' => $request['professionalDevelopmentRequestID'], 'title' => 'Professional Development - '. $request['eventTitle'], 'eventDescription' => $request['eventDescription'], 'expenseRequest' => $request['expenseRequest']];
 
-            $requestPersonGateway = $container->get(RequestPersonGateway::class);
-            $peopleCriteria = $requestPersonGateway->newQueryCriteria()
-                ->filterBy('professionalDevelopmentRequestID', $request['professionalDevelopmentRequestID'])
-                ->sortBy(['surname', 'preferredName'])
-                ->pageSize(0);
-            $participants = $requestPersonGateway->queryRequestPeople($peopleCriteria);
+            // Check if the user is a participant
+            $isParticipant = array_search($gibbonPersonID, array_column($request['participants'], 'gibbonPersonID')) !== false;
 
+            // Check if the user has already submitted an expense request
+            $hasSubmitted = array_filter($request['participants'], function ($participant) use ($gibbonPersonID) {
+                return $participant['gibbonPersonID'] == $gibbonPersonID && !empty($participant['gibbonFinanceExpenseID']);
+            });
 
-            if ($request['status'] == 'Approved' ) {
+            if ($request['status'] == 'Approved' && $isParticipant) {
                 if ($request['expenseRequest'] == 'Group Leader' && $gibbonPersonID == $request['gibbonPersonIDCreated']) {
-                $actions->addAction('add', __('Add Expense Request'))
-                    ->setIcon('payment')
-                    ->addParams($newPDExpenseParams)
-                    ->setURL('/modules/Professional Development/pd_addExpenseRequest.php')
-                    ->displayLabel();
-                } else if ($request['expenseRequest'] == 'Individual' && array_search($gibbonPersonID, array_column($participants->toArray(), 'gibbonPersonID')) !== false) {
-                $actions->addAction('add', __('Add Expense Request'))
-                    ->setIcon('payment')
-                    ->addParams($newPDExpenseParams)
-                    ->setURL('/modules/Professional Development/pd_addExpenseRequest.php')
-                    ->displayLabel();
+                    if (empty($hasSubmitted)) {
+                        $actions->addAction('add', __('Add Expense Request'))
+                            ->setIcon('payment')
+                            ->addParams($newPDExpenseParams)
+                            ->setURL('/modules/Professional Development/pd_addExpenseRequest.php')
+                            ->displayLabel();
+                    } else {
+                        $actions->addAction('viewExpense', __('View Submitted Expense Request'))
+                            ->setIcon('check')
+                            ->setURL('/modules/Finance/expenseRequest_manage.php')
+                            ->displayLabel();
+                    }
+                } else if ($request['expenseRequest'] == 'Individual') {
+                    if (empty($hasSubmitted)) {
+                        $actions->addAction('add', __('Add Expense Request'))
+                            ->setIcon('payment')
+                            ->addParams($newPDExpenseParams)
+                            ->setURL('/modules/Professional Development/pd_addExpenseRequest.php')
+                            ->displayLabel();
+                    } else {
+                        $actions->addAction('viewExpense', __('View Submitted Expense Request'))
+                            ->setIcon('check')
+                            ->setURL('/modules/Finance/expenseRequest_manage.php')
+                            ->displayLabel();
+                    }
                 }
             }
  

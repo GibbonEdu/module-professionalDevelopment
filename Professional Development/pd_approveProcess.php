@@ -41,9 +41,9 @@ $gibbonPersonID = $session->get('gibbonPersonID');
 $personName = Format::name('', $session->get('preferredName'), $session->get('surname'), 'Staff', false, true);
 
 $requestApproversGateway = $container->get(RequestApproversGateway::class);
-$approver = $requestApproversGateway->selectApproverByPerson($gibbonPersonID);
-$isApprover = !empty($approver);
-$finalApprover = $isApprover ? $approver['finalApprover'] : false;
+$approver = $requestApproversGateway->selectApproverByPerson($gibbonPersonID);   // Check if the user is an approver
+$isApprover = !empty($approver);   // True if user is one of thh approver
+$finalApprover = $isApprover ? $approver['finalApprover'] : false; // True if approver is also a final approver
 
 if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manage.php') || !$isApprover) {
     // Access denied
@@ -93,19 +93,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
            
             if ($requestStatus == 'Approval') {
-                if($status == 'Awaiting Final Approval') {
+
+                $isFinalApproval = $finalApprover || $status == 'Awaiting Final Approval';
+                $isFullyApproved = false;
+                
+                if($isFinalApproval) {
                     $requestStatus .= ' - Final';
+                    $isFullyApproved = true;
 
                     if (!$requestsGateway->update($professionalDevelopmentRequestID, ['status' => 'Approved'])) {
                         $URL .= '&return=error2';
                         header("Location: {$URL}");
                         exit();
                     }
-
-                    if ($owner != $gibbonPersonID) {
-                        $notificationSender->addNotification($owner, __('Your trip request has been fully approved by {person}.', ['person' => $personName]).$commentText, $moduleName, $notificationURL);
-                    }
-
                 } else {
                     $done = false;
                     $requestApprovalType = $settingGateway->getSettingByScope('Professional Development', 'requestApprovalType');
@@ -130,8 +130,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                             $status = 'Awaiting Final Approval';
                             $requestStatus .= ' - Partial';
                         } else {
-                            $requestStatus .= ' - Final';
                             $status = 'Approved';
+                            $requestStatus .= ' - Final';
+                            $isFullyApproved = true;
                         }
 
                         if (!$requestsGateway->update($professionalDevelopmentRequestID, ['status' => $status])) {
@@ -139,31 +140,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                             header("Location: {$URL}");
                             exit();
                         }
-
-                        if ($status == 'Approved') {
-                            // Custom notifications for final approval
-                            $event = new NotificationEvent('Professional Development', 'Request Approval');
-
-                            $notificationText = __('A Professional Development request has been approved by {person}: {request}', ['person' => $personName, 'request' => $pdRequest['eventTitle']]);
-
-                            $event->setNotificationText($notificationText);
-                            $event->setActionLink($notificationURL);
-
-                            $event->sendNotifications($pdo, $session);
-
-                            if ($pdRequest['expenseRequest'] == 'Individual') {
-                                $message = __('Your PD request has been fully approved by {person}. Please ask all the participants to submit their expense request.', ['person' => $personName]).$commentText;
-                            } else {
-                                $message = __('Your PD request has been fully approved by {person}. Please submit the expense request.', ['person' => $personName]).$commentText;
-                            }
-                        } else {
-                            $message = __('Your PD request has been partially approved by {person} and is awaiting final approval.', ['person' => $personName]).$commentText;
-                        }
-
-                        if ($owner != $gibbonPersonID) {
-                            $notificationSender->addNotification($owner, $message, $moduleName, $notificationURL);
-                        }
                     } else if (!empty($nextApprover) && $nextApprover->isNotEmpty()) {
+                        // Notify the next approver
                         $requestStatus .= ' - Partial';
                         $nextApprover = $nextApprover->fetch();
 
@@ -175,9 +153,33 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                     } else {
                         $requestStatus .= ' - Partial';
 
-                        if ($owner != $gibbonPersonID) {
+                          if ($owner != $gibbonPersonID) {
                             $notificationSender->addNotification($owner, __('Your PD request has been partially approved by {person} and is awaiting final approval.', ['person' => $personName]).$commentText, $moduleName, $notificationURL);
                         }
+                    }
+                }
+
+                // Handle notifications for fully approved requests
+                if ($isFullyApproved) {
+
+                    // Event Notification for request approval
+                    $event = new NotificationEvent('Professional Development', 'Request Approval');
+                    $notificationText = __('A Professional Development request has been approved by {person}: {request}', ['person' => $personName, 'request' => $pdRequest['eventTitle']]);
+                    $event->setNotificationText($notificationText);
+                    $event->setActionLink($notificationURL);
+                    $event->sendNotifications($pdo, $session);
+
+                    // Custom notifications to owner for final approval
+                    if ($pdRequest['expenseRequest'] == 'Individual') {
+                        $message = __('Your PD request has been fully approved by {person}. Please ask all the participants to submit their expense request.', ['person' => $personName]) . $commentText;
+                    } else if ($pdRequest['expenseRequest'] == 'Group Leader') {
+                        $message = __('Your PD request has been fully approved by {person}. Please submit the expense request.', ['person' => $personName]) . $commentText;
+                    } else {
+                        $message = __('Your PD request has been fully approved by {person}.', ['person' => $personName]) . $commentText;
+                    }
+
+                    if ($owner != $gibbonPersonID) {
+                        $notificationSender->addNotification($owner, $message, $moduleName, $notificationURL);
                     }
                 }
             } else if ($requestStatus == 'Rejection') {
@@ -188,7 +190,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                 }
 
                 if ($owner != $gibbonPersonID) {
-                    $notificationSender->addNotification($owner, __('Your trip request has been rejected by {person}. Please see their comments for more details.', ['person' => $personName]).$commentText, $moduleName, $notificationURL);
+                    $notificationSender->addNotification($owner, __('Your PD request has been rejected by {person}. Please see their comments for more details.', ['person' => $personName]).$commentText, $moduleName, $notificationURL);
                 }
             } else if ($requestStatus == 'Comment') {
                 requestCommentNotifications($professionalDevelopmentRequestID, $gibbonPersonID, $personName, $requestLogGateway, $pdRequest, $comment, $notificationSender);
@@ -211,7 +213,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                 exit();
             }
 
-            //Send notifications
+            // Send notifications
             $notificationSender->sendNotifications();
 
             $approval = 'Approval';

@@ -19,6 +19,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 CHANGELOG
 =========
 
+v0.0.03
+-------
+Fixed the issue so that HOS approval is final approval
+Fixed the issue so that a participant cannot submit multiple expense requests
+
 v0.0.02
 -------
 Adding the feature to add a purchase/reimburse request related to a PD activity
