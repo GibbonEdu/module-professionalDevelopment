@@ -101,6 +101,23 @@ class RequestsGateway extends QueryableGateway
         return $this->runQuery($query, $criteria);
 
     }
+
+    public function selectParticipantsByRequest($professionalDevelopmentRequestIDList, $allFields = false) {
+        $professionalDevelopmentRequestIDList = is_array($professionalDevelopmentRequestIDList) ? implode(',', $professionalDevelopmentRequestIDList) : $professionalDevelopmentRequestIDList;
+
+        $query = $this
+            ->newSelect()
+            ->cols($allFields
+                ? ['professionalDevelopmentRequestPerson.professionalDevelopmentRequestID', 'professionalDevelopmentRequestPerson.*', 'gibbonPerson.*']
+                : ['professionalDevelopmentRequestPerson.professionalDevelopmentRequestID', 'professionalDevelopmentRequestPerson.*', 'gibbonPerson.gibbonPersonID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname', 'gibbonPerson.email'])
+            ->from('professionalDevelopmentRequestPerson')
+            ->innerJoin('gibbonPerson', 'professionalDevelopmentRequestPerson.gibbonPersonID=gibbonPerson.gibbonPersonID')
+            ->where('FIND_IN_SET(professionalDevelopmentRequestPerson.professionalDevelopmentRequestID, :professionalDevelopmentRequestIDList)')
+            ->bindValue('professionalDevelopmentRequestIDList', $professionalDevelopmentRequestIDList)
+            ->orderBy(['gibbonPerson.surname', 'gibbonPerson.preferredName']);
+
+        return $this->runSelect($query);
+    }
     
     public function beginTransaction() {
         $this->db()->beginTransaction();

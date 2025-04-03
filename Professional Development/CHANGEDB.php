@@ -27,7 +27,6 @@ $count++;
 $sql[$count][0] = "0.0.01";
 $sql[$count][1] = "";
 
-
 // v0.0.02
 $count++;
 $sql[$count][0] = "0.0.02";
@@ -36,3 +35,8 @@ ALTER TABLE `professionalDevelopmentRequests` CHANGE `coverAmount` `expenseReque
 ALTER TABLE `professionalDevelopmentRequestPerson` ADD `gibbonFinanceExpenseID` INT(14) UNSIGNED ZEROFILL NULL AFTER `role`;end
 INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `type`, `scopes`, `active`) VALUES ('Expense Request Notifications', 'Professional Development', 'New Application_my', 'Additional', 'All', 'Y');end
 ";
+
+// v0.0.03
+$count++;
+$sql[$count][0] = "0.0.03";
+$sql[$count][1] = "";
