@@ -27,7 +27,7 @@ $description = 'A Professional Development (PD) module for Gibbon to record Staf
 $entryURL    = "pd_manage.php";   // The landing page for the unit, used in the main menu
 $type        = "Additional";
 $category    = 'Other';
-$version     = '0.0.03';
+$version     = '0.0.06';
 $author      = 'Gibbon Foundation';
 $url         = 'https://github.com/GibbonEdu/module-professionalDevelopment';
 
@@ -97,6 +97,10 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestApprovers` (
   `finalApprover` TINYINT(1) DEFAULT '0',
   PRIMARY KEY (`professionalDevelopmentRequestApproversID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
+$moduleTables[] = "CREATE TABLE `professionalDevelopmentPortfolio` (`professionalDevelopmentPortfolioID` INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT, `professionalDevelopmentRequestID` INT(10) UNSIGNED ZEROFILL DEFAULT NULL,`gibbonSchoolYearID` VARCHAR(3) NOT NULL, `gibbonPersonID` INT(10) NOT NULL, `status` VARCHAR(60) NOT NULL, `role` VARCHAR(60) NOT NULL, `type` VARCHAR(60) NOT NULL, `title` VARCHAR(60) NOT NULL, `completionDate` DATE NOT NULL, `timeSpent` DECIMAL(3,2) NOT NULL, `keyFocus` VARCHAR(100) NOT NULL, `resourcesLinks` VARCHAR(100) DEFAULT NULL, `keyTakeaways` VARCHAR(100) NOT NULL, `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (`professionalDevelopmentPortfolioID`)) ENGINE = InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;";
+
+$moduleTables[] = "CREATE TABLE `professionalDevelopmentPortfolioTag` (`professionalDevelopmentPortfolioTagID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT, `tag` varchar(60) NOT NULL, PRIMARY KEY (`professionalDevelopmentPortfolioTagID`), UNIQUE KEY `tag` (`tag`)) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;";
 
 // Add gibbonSettings entries
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a request has to go through.', 'One Of')";

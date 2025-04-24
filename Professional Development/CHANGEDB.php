@@ -40,3 +40,25 @@ INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `typ
 $count++;
 $sql[$count][0] = "0.0.03";
 $sql[$count][1] = "";
+
+// v0.0.04
+$count++;
+$sql[$count][0] = "0.0.04";
+$sql[$count][1] = "
+CREATE TABLE `professionalDevelopmentPortfolio` (`professionalDevelopmentPortfolioID` INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT, `professionalDevelopmentRequestID` INT(10) UNSIGNED ZEROFILL DEFAULT NULL,`gibbonSchoolYearID` VARCHAR(3) NOT NULL, `gibbonPersonID` INT(10) NOT NULL, `status` VARCHAR(60) NOT NULL, `role` VARCHAR(60) NOT NULL, `type` VARCHAR(60) NOT NULL, `title` VARCHAR(60) NOT NULL, `completionDate` DATE NOT NULL, `timeSpent` DECIMAL(3,2) NOT NULL, `keyFocus` VARCHAR(100) NOT NULL, `resourcesLinks` VARCHAR(100) DEFAULT NULL, `keyTakeaways` VARCHAR(100) NOT NULL, `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (`professionalDevelopmentPortfolioID`)) ENGINE = InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;end
+CREATE TABLE `professionalDevelopmentPortfolioTag` (`professionalDevelopmentPortfolioTagID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT, `tag` varchar(60) NOT NULL, PRIMARY KEY (`professionalDevelopmentPortfolioTagID`), UNIQUE KEY `tag` (`tag`)) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;end
+";
+
+// v0.0.05
+$count++;
+$sql[$count][0] = "0.0.05";
+$sql[$count][1] = "
+INSERT INTO `gibbonAction` (`gibbonModuleID`, `name`, `precedence`, `category`, `description`, `helpURL`, `URLList`, `entryURL`, `entrySidebar`, `menuShow`, `defaultPermissionAdmin`, `defaultPermissionTeacher`, `defaultPermissionStudent`, `defaultPermissionParent`, `defaultPermissionSupport`, `categoryPermissionStaff`, `categoryPermissionStudent`, `categoryPermissionParent`, `categoryPermissionOther`) VALUES((SELECT gibbonModuleID FROM gibbonModule WHERE name='Professional Development'), 'New Portfolio Record_my', 0, 'Portfolio', 'Allows users to add records to their portfolio.', NULL, 'pd_portfolio_addRecord.php', 'pd_portfolio_addRecord.php', 'Y', 'Y', 'Y', 'Y', 'N', 'N', 'Y', 'Y', 'N', 'N', 'N');end
+INSERT INTO `gibbonAction` (`gibbonModuleID`, `name`, `precedence`, `category`, `description`, `helpURL`, `URLList`, `entryURL`, `entrySidebar`, `menuShow`, `defaultPermissionAdmin`, `defaultPermissionTeacher`, `defaultPermissionStudent`, `defaultPermissionParent`, `defaultPermissionSupport`, `categoryPermissionStaff`, `categoryPermissionStudent`, `categoryPermissionParent`, `categoryPermissionOther`) VALUES((SELECT gibbonModuleID FROM gibbonModule WHERE name='Professional Development'), 'New Portfolio Record_all', 1, 'Portfolio', 'Allows users to add records to their portfolio.', NULL, 'pd_portfolio_addRecord.php', 'pd_portfolio_addRecord.php', 'Y', 'Y', 'Y', 'N', 'N', 'N', 'N', 'Y', 'N', 'N', 'N');end
+";
+
+// v0.0.06
+$count++;
+$sql[$count][0] = "0.0.06";
+$sql[$count][1] = "INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `type`, `scopes`, `active`) VALUES ('New Portfolio Record', 'Professional Development', 'New Portfolio Record_all', 'Additional', 'All', 'Y');end
+";

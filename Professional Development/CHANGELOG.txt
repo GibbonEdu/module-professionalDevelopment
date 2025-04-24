@@ -19,6 +19,18 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 CHANGELOG
 =========
 
+v0.0.05
+-------
+Added new notification event for new portfolio record
+
+v0.0.05
+-------
+Added new action rows for PD Portfolio
+
+v0.0.04
+-------
+Added the feature to add records to PD Portfolio
+
 v0.0.03
 -------
 Fixed the issue so that HOS approval is final approval
