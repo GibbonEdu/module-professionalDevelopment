@@ -19,7 +19,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 CHANGELOG
 =========
 
-v0.0.05
+v0.0.07
+-------
+Added the option to edit and view a record 
+
+v0.0.06
 -------
 Added new notification event for new portfolio record
 
