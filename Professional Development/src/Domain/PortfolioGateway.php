@@ -36,13 +36,33 @@ class PortfolioGateway extends QueryableGateway
     use TableAware; 
     private static $tableName = 'professionalDevelopmentPortfolio'; 
     private static $primaryKey = 'professionalDevelopmentPortfolioID';
-    private static $searchableColumns = [];
+    private static $searchableColumns = ['professionalDevelopmentPortfolio.title', 'type', 'role', 'keyFocus'];
 
-    public function queryPortfolio(QueryCriteria $criteria) {
+    public function queryPortfolio(QueryCriteria $criteria, $gibbonSchoolYearID, $gibbonPersonID = null) {
         $query = $this->newQuery()
         ->from($this->getTableName())
+        ->innerJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID = professionalDevelopmentPortfolio.gibbonPersonID')
         ->cols([
-            'professionalDevelopmentPortfolio.professionalDevelopmentPortfolioID',
+        'professionalDevelopmentPortfolio.*',
+        'professionalDevelopmentPortfolio.title as recordTitle',
+        'gibbonPerson.title',
+        'gibbonPerson.preferredName',
+        'gibbonPerson.surname',
+        ])
+        ->where('professionalDevelopmentPortfolio.gibbonSchoolYearID=:gibbonSchoolYearID')
+        ->bindValue('gibbonSchoolYearID', $gibbonSchoolYearID);
+
+
+        if (!empty($gibbonPersonID)) {
+            $query->where('professionalDevelopmentPortfolio.gibbonPersonID = :gibbonPersonID')
+            ->bindValue('gibbonPersonID', $gibbonPersonID);
+        }
+
+        $criteria->addFilterRules([
+            'year' => function ($query, $gibbonSchoolYearID) {
+                return $query->where('professionalDevelopmentPortfolio.gibbonSchoolYearID = :gibbonSchoolYearID')
+                ->bindValue('gibbonSchoolYearID', $gibbonSchoolYearID);
+            },
         ]);
 
         return $this->runQuery($query, $criteria);
