@@ -26,6 +26,7 @@ use Gibbon\Forms\DatabaseFormFactory;
 use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\Departments\DepartmentGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
+use Gibbon\Module\ProfessionalDevelopment\Domain\RequestDaysGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
 
 // Module includes
@@ -104,6 +105,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     }
 
     // Professional Development Request Data
+    $requestDaysGateway = $container->get(RequestDaysGateway::class);
     $requestsGateway = $container->get(RequestsGateway::class);
     $criteria = $requestsGateway->newQueryCriteria(true)
         ->searchBy($requestsGateway->getSearchableColumns(), $search)
@@ -215,7 +217,7 @@ $table->addColumn('expenseSubmission', __('Expenses'))
 $table->addActionColumn()
         ->addParam('professionalDevelopmentRequestID')
         ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
-        ->format(function ($request, $actions) use ($container, $gibbonPersonID, $highestAction)  {
+        ->format(function ($request, $actions) use ($container, $gibbonPersonID, $highestAction, $requestDaysGateway)  {
 
             if (needsApproval($container, $gibbonPersonID, $request['professionalDevelopmentRequestID'])) {
                 $actions->addAction('approve', __('Approve/Reject'))
@@ -263,6 +265,23 @@ $table->addActionColumn()
                             ->setURL('/modules/Finance/expenseRequest_manage.php')
                             ->displayLabel();
                     }
+                }
+
+                 // Get the final date of the trip
+                $daysCriteria = $requestDaysGateway->newQueryCriteria()
+                    ->filterBy('professionalDevelopmentRequestID', $request['professionalDevelopmentRequestID'])
+                    ->sortBy(['date'], 'DESC');
+
+                $days = $requestDaysGateway->queryRequestDays($daysCriteria)->toArray();
+                $lastDay = $days[0]['date'] ?? '';
+                $currentDate = date('Y-m-d');
+
+                if ($currentDate >= $lastDay) {
+                    $actions->addAction('addPortfolioRecord', __('Add Record for Portfolio'))
+                            ->setIcon('document')
+                            ->setURL('/modules/Professional Development/pd_portfolio_addRecord.php')
+                            ->addParams(['professionalDevelopmentRequestID' => $request['professionalDevelopmentRequestID']])
+                            ->displayLabel();
                 }
             }
  
