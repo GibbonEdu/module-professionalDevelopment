@@ -116,7 +116,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $row = $form->addRow();
             $row->addLabel('completionDate', __('Date of Completion'))->description(__('Last date of the activity'));
             $row->addDate('completionDate')->setValue($lastDay ?? '')->required()->placeholder(__('Date'))->setClass('w-auto');
-  
+
     $row = $form->addRow();
         $row->addLabel('timeSpent', __('Time spent (Hours)'));
         $row->addNumber('timeSpent')->decimalPlaces(1)->minimum(0)->maximum(999)->maxLength(3)->required();

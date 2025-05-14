@@ -102,9 +102,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $event = new NotificationEvent('Professional Development', 'New Portfolio Record');
 
     $event->setNotificationText(__('{person} has submitted a new record: {request} for their PD Portfolio', ['person' => $personName, 'request' => $portfolioData['title']]));
-
     $event->setActionLink('/index.php?q=/modules/Professional Development/pd_portfolio_editRecord.php&professionalDevelopmentPortfolioID=' . $professionalDevelopmentPortfolioID);
-    
+
     // Send notification
     $event->pushNotifications($notificationGateway, $notificationSender);
 
