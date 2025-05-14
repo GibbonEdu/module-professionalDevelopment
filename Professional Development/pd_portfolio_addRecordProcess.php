@@ -57,7 +57,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         'role'                              => $_POST['role'],
         'type'                              => $_POST['type'],
         'title'                             => $_POST['title'],
-        'completiondate'                    => $_POST['completiondate'],
+        'completionDate'                    => $_POST['completionDate'],
         'timeSpent'                         => $_POST['timeSpent'],
         'keyFocus'                          => $_POST['keyFocus'],
         'keyTakeaways'                      => $_POST['keyTakeaways'],
@@ -102,18 +102,20 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $event = new NotificationEvent('Professional Development', 'New Portfolio Record');
 
     $event->setNotificationText(__('{person} has submitted a new record: {request} for their PD Portfolio', ['person' => $personName, 'request' => $portfolioData['title']]));
-    $event->setActionLink('/index.php?q=/modules/Professional Development/pd_portfolio_viewRecord.php&professionalDevelopmentPortfolioID=' . $professionalDevelopmentPortfolioID);
+
+    $event->setActionLink('/index.php?q=/modules/Professional Development/pd_portfolio_editRecord.php&professionalDevelopmentPortfolioID=' . $professionalDevelopmentPortfolioID);
+    
     // Send notification
     $event->pushNotifications($notificationGateway, $notificationSender);
 
    // Send notification for the selected people to notify
     foreach ($notificationList as $recipient) {
-        $notificationSender->addNotification($recipient, __('{person} has submitted a new record: {request} for their PD Portfolio', ['person' => $personName, 'request' => $portfolioData['title']]), 'Professional Development', '/index.php?q=/modules/Professional Development/pd_portfolio_viewRecord.php&professionalDevelopmentPortfolioID='.$professionalDevelopmentPortfolioID);
+        $notificationSender->addNotification($recipient, __('{person} has submitted a new record: {request} for their PD Portfolio', ['person' => $personName, 'request' => $portfolioData['title']]), 'Professional Development', '/index.php?q=/modules/Professional Development/pd_portfolio_editRecord.php&professionalDevelopmentPortfolioID='.$professionalDevelopmentPortfolioID);
         $notificationSender->sendNotifications();
     }
 
     // Send a notification for the user who created the record
-    $notificationSender->addNotification($portfolioData['gibbonPersonID'], __('You have submitted a new record: {request} for your PD Portfolio', ['request' => $portfolioData['title']]), 'Professional Development', '/index.php?q=/modules/Professional Development/pd_portfolio_viewRecord.php&professionalDevelopmentPortfolioID='.$professionalDevelopmentPortfolioID);
+    $notificationSender->addNotification($portfolioData['gibbonPersonID'], __('You have submitted a new record: {request} for your PD Portfolio', ['request' => $portfolioData['title']]), 'Professional Development', '/index.php?q=/modules/Professional Development/pd_portfolio_editRecord.php&professionalDevelopmentPortfolioID='.$professionalDevelopmentPortfolioID);
     $notificationSender->sendNotifications();
 
     $URL .= $partialFail
