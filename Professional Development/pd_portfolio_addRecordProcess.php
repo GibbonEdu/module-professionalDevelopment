@@ -24,6 +24,7 @@ use Gibbon\Services\Format;
 use Gibbon\Comms\NotificationEvent;
 use Gibbon\Comms\NotificationSender;
 use Gibbon\Domain\System\NotificationGateway;
+use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\PortfolioGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\PortfolioTagGateway;
