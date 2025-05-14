@@ -24,6 +24,7 @@ use Gibbon\Services\Format;
 use Gibbon\Comms\NotificationEvent;
 use Gibbon\Comms\NotificationSender;
 use Gibbon\Domain\System\NotificationGateway;
+use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\PortfolioGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\PortfolioTagGateway;
@@ -101,7 +102,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $event = new NotificationEvent('Professional Development', 'New Portfolio Record');
 
     $event->setNotificationText(__('{person} has submitted a new record: {request} for their PD Portfolio', ['person' => $personName, 'request' => $portfolioData['title']]));
+
     $event->setActionLink('/index.php?q=/modules/Professional Development/pd_portfolio_editRecord.php&professionalDevelopmentPortfolioID=' . $professionalDevelopmentPortfolioID);
+    
     // Send notification
     $event->pushNotifications($notificationGateway, $notificationSender);
 
