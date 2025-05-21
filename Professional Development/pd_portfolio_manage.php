@@ -70,12 +70,22 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $gibbonPersonIDFilter = $highestAction == 'Manage Portfolio_full' ? null : $gibbonPersonID;
     $portfolio = $portfolioGateway->queryPortfolio($criteria, $gibbonSchoolYearID, $gibbonPersonIDFilter);
 
-    // Data Table
+    // Portfolio Records Data Table
     $table = DataTable::createPaginated('portfolio', $criteria);
     $table->setTitle($highestAction == 'Manage Portfolio_full' ? __('All Portfolio Records') : __('My Portfolio'));
 
     $table->addMetaData('post', ['gibbonSchoolYearID' => $gibbonSchoolYearID]);
 
+    $table->addMetaData('filterOptions', [
+        'type:Internal' => __('Type').': '.__('Internal'),
+        'type:External - Local'  => __('Type').': '.__('External - Local'),
+        'type:External - Overseas'  => __('Type').': '.__('External - Overseas'),
+        'role:Attendee' => __('Role').': '.__('Attendee'),
+        'role:Presenter' => __('Role').': '.__('Presenter'),
+        'role:Organiser' => __('Role').': '.__('Organiser'),
+        'role:Other' => __('Role').': '.__('Other'),
+    ]);
+    
     $table->addHeaderAction('add', __('New Record'))
         ->displayLabel()
         ->setURL('/modules/Professional Development/pd_portfolio_addRecord.php');

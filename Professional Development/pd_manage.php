@@ -68,7 +68,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $checkAwaitingApproval = ($isApprover && $requestApprovalType == 'Chain Of All') || ($headApproval && $finalApprover);
 
-    // SEARCH
+    
     if ($highestAction == 'Manage Applications_full') {
         // Department Data
         $departmentGateway = $container->get(DepartmentGateway::class);
@@ -78,31 +78,31 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             $group[$department['gibbonDepartmentID']] = $department['name'];
             return $group;
         }, []);
-
-        // Filter Form
-        $form = Form::create('requestFilters', $gibbon->session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
-        $form->setFactory(DatabaseFormFactory::create($pdo));
-        $form->setTitle(__('Filter'));
-        $form->setClass('noIntBorder fullWidth');
-
-        $row = $form->addRow();
-            $row->addLabel('search', 'Search');
-            $row->addTextField('search')->setValue($search);
-
-        if (!empty($departments)) {
-            $row = $form->addRow();
-                $row->addLabel('gibbonDepartmentID', 'Department');
-                $row->addSelect('gibbonDepartmentID')
-                    ->fromArray($departments)
-                    ->placeholder()
-                    ->selected($gibbonDepartmentID);
-        }
-
-        $row = $form->addRow();
-            $row->addSearchSubmit($session);
-            
-        echo $form->getOutput(); 
     }
+
+    // SEARCH
+    $form = Form::create('requestFilters', $session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
+    $form->setFactory(DatabaseFormFactory::create($pdo));
+    $form->setTitle(__('Search'));
+    $form->setClass('noIntBorder fullWidth');
+
+    $row = $form->addRow();
+        $row->addLabel('search', 'Search For')->description(__('Title, owner, type, focus'));
+        $row->addTextField('search')->setValue($search);
+
+    if (!empty($departments)) {
+        $row = $form->addRow();
+            $row->addLabel('gibbonDepartmentID', 'Department');
+            $row->addSelect('gibbonDepartmentID')
+                ->fromArray($departments)
+                ->placeholder()
+                ->selected($gibbonDepartmentID);
+    }
+
+    $row = $form->addRow();
+        $row->addSearchSubmit($session, __('Clear Search'));
+        
+    echo $form->getOutput();
 
     // Professional Development Request Data
     $requestDaysGateway = $container->get(RequestDaysGateway::class);
@@ -130,7 +130,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         }
     });
 
-    // Requests Table
+    // Requests Data Table
     $table = DataTable::createPaginated('requests', $criteria);
     $table->setTitle($highestAction == 'Manage Applications_full' ? __('All Applications') : __('My Applications'));
 

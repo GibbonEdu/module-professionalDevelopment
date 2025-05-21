@@ -17,7 +17,7 @@ class RequestsGateway extends QueryableGateway
 
     private static $tableName = 'professionalDevelopmentRequests'; 
     private static $primaryKey = 'professionalDevelopmentRequestID';
-    private static $searchableColumns = ['gibbonPerson.preferredName', 'gibbonPerson.surname'];
+    private static $searchableColumns = ['professionalDevelopmentRequests.eventTitle', 'professionalDevelopmentRequests.eventType', 'professionalDevelopmentRequests.eventFocus', 'gibbonPerson.preferredName', 'gibbonPerson.surname'];
 
     public function queryRequests(QueryCriteria $criteria, $gibbonSchoolYearID, $gibbonPersonID = null, $gibbonDepartmentID = null, $expiredUnapproved = null) {
         
@@ -34,6 +34,8 @@ class RequestsGateway extends QueryableGateway
         'professionalDevelopmentRequests.expenseRequest',
         'professionalDevelopmentRequests.status',
         'gibbonPerson.title',
+        'professionalDevelopmentRequests.eventType',
+        'professionalDevelopmentRequests.eventFocus',
         'gibbonPerson.preferredName',
         'gibbonPerson.surname',
         '(SELECT date FROM professionalDevelopmentRequestDays WHERE professionalDevelopmentRequestID = professionalDevelopmentRequests.professionalDevelopmentRequestID ORDER BY date ASC LIMIT 1) as firstDayOfTrip',
