@@ -63,6 +63,18 @@ class PortfolioGateway extends QueryableGateway
                 return $query->where('professionalDevelopmentPortfolio.gibbonSchoolYearID = :gibbonSchoolYearID')
                 ->bindValue('gibbonSchoolYearID', $gibbonSchoolYearID);
             },
+
+            'type' => function ($query, $type) {
+                return $query
+                    ->where('professionalDevelopmentPortfolio.type = :type')
+                    ->bindValue('type', ucfirst($type));
+            },
+
+            'role' => function ($query, $role) {
+                return $query
+                    ->where('professionalDevelopmentPortfolio.role = :role')
+                    ->bindValue('role', ucfirst($role));
+            },
         ]);
 
         return $this->runQuery($query, $criteria);

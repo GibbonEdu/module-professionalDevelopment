@@ -171,9 +171,9 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
                     // Custom notifications to owner for final approval
                     if ($pdRequest['expenseRequest'] == 'Individual') {
-                        $message = __('Your PD request has been fully approved by {person}. Please ask all the participants to submit their expense request.', ['person' => $personName]) . $commentText;
+                        $message = __('Your PD request has been fully approved by {person}. Please ask all the participants of your group to submit their expense request.', ['person' => $personName]) . $commentText;
                     } else if ($pdRequest['expenseRequest'] == 'Group Leader') {
-                        $message = __('Your PD request has been fully approved by {person}. Please submit the expense request.', ['person' => $personName]) . $commentText;
+                        $message = __('Your PD request has been fully approved by {person}. Please submit the expense request as the Group Leader.', ['person' => $personName]) . $commentText;
                     } else {
                         $message = __('Your PD request has been fully approved by {person}.', ['person' => $personName]) . $commentText;
                     }
