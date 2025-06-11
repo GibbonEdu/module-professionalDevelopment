@@ -277,7 +277,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             $row = $form->addRow();
                 $row->addLabel('supportingEvidence', __('Supporting Evidence (If applicable)'))->description(__('Please upload any supporting evidence that you think might be useful in assessing your application'));
                 $row->addFileUpload('supportingEvidenceFile')
-                    ->setAttachment('supportingEvidence', $gibbon->session->get('absoluteURL'), $pdRequest['supportingEvidence']);
+                    ->setAttachment('supportingEvidence', $session->get('absoluteURL'), $pdRequest['supportingEvidence']);
         }
 
     $row = $form->addRow()->addClass('notes');

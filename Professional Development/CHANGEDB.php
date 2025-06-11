@@ -71,5 +71,9 @@ INSERT INTO `gibbonAction` (`gibbonModuleID`, `name`, `precedence`, `category`, 
 INSERT INTO `gibbonAction` (`gibbonModuleID`, `name`, `precedence`, `category`, `description`, `helpURL`, `URLList`, `entryURL`, `entrySidebar`, `menuShow`, `defaultPermissionAdmin`, `defaultPermissionTeacher`, `defaultPermissionStudent`, `defaultPermissionParent`, `defaultPermissionSupport`, `categoryPermissionStaff`, `categoryPermissionStudent`, `categoryPermissionParent`, `categoryPermissionOther`) VALUES((SELECT gibbonModuleID FROM gibbonModule WHERE name='Professional Development'), 'Manage Portfolio_full', 1, 'Portfolio', 'Allows users to manage all portfolio records.', NULL, 'pd_portfolio_manage.php', 'pd_portfolio_manage.php', 'Y', 'Y', 'Y', 'N', 'N', 'N', 'N', 'Y', 'N', 'N', 'N');end
 INSERT INTO `gibbonPermission` (`gibbonRoleID` ,`gibbonActionID`) VALUES ('001', (SELECT gibbonActionID FROM gibbonAction JOIN gibbonModule ON (gibbonAction.gibbonModuleID=gibbonModule.gibbonModuleID) WHERE gibbonModule.name='Professional Development' AND gibbonAction.name='New Portfolio Record_all'));end
 INSERT INTO `gibbonPermission` (`gibbonRoleID` ,`gibbonActionID`) VALUES ('001', (SELECT gibbonActionID FROM gibbonAction JOIN gibbonModule ON (gibbonAction.gibbonModuleID=gibbonModule.gibbonModuleID) WHERE gibbonModule.name='Professional Development' AND gibbonAction.name='Manage Portfolio_full'));end
-
 ";
+
+// v0.0.08
+$count++;
+$sql[$count][0] = "0.0.08";
+$sql[$count][1] = "";
