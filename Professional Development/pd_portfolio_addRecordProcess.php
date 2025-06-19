@@ -24,7 +24,6 @@ use Gibbon\Services\Format;
 use Gibbon\Comms\NotificationEvent;
 use Gibbon\Comms\NotificationSender;
 use Gibbon\Domain\System\NotificationGateway;
-use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\PortfolioGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\PortfolioTagGateway;
@@ -43,15 +42,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $requestsGateway = $container->get(RequestsGateway::class);
     $portfolioGateway = $container->get(PortfolioGateway::class);
     $portfolioTagGateway = $container->get(PortfolioTagGateway::class);
-    $professionalDevelopmentRequestID = $_POST['professionalDevelopmentRequestID'] ?? '';
-    $notificationList = !empty($_POST['notificationList'])? explode(',', $_POST['notificationList']) : [];
-    $personName = Format::name('', $session->get('preferredName'), $session->get('surname'), 'Staff', false, true);
 
+    $professionalDevelopmentRequestID = $_POST['professionalDevelopmentRequestID'] ?? '';
     $URL .= '/pd_portfolio_addRecord.php&professionalDevelopmentRequestID='.$professionalDevelopmentRequestID;
     $partialFail = false;
 
     $portfolioData = [
-        'gibbonSchoolYearID'                => $session->get('gibbonSchoolYearID'),
+        'gibbonSchoolYearID'                => $session->get('gibbonSchoolYearID') ?? '',
         'gibbonPersonID'                    => $_POST['gibbonPersonID'] ?? $session->get('gibbonPersonID'),
         'status'                            => $_POST['status'],
         'role'                              => $_POST['role'],
@@ -59,7 +56,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         'title'                             => $_POST['title'],
         'completionDate'                    => $_POST['completionDate'],
         'timeSpent'                         => $_POST['timeSpent'],
-        'keyFocus'                          => $_POST['keyFocus'],
         'keyTakeaways'                      => $_POST['keyTakeaways'],
     ];
 
@@ -72,7 +68,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     }
 
     $portfolioData['professionalDevelopmentRequestID']  = $professionalDevelopmentRequestID;
-    $portfolioData['resourcesLinks'] = $_POST['resourcesLinks'];
+    $portfolioData['resourcesLinks'] = $_POST['resourcesLinks'] ?? '';
+    $portfolioData['keyFocus'] = $_POST['keyFocus'] ?? '';
 
     // Ensure Key Focus tags are uppercase and trimmed
     if (!empty($portfolioData['keyFocus'])) {
@@ -96,8 +93,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $portfolioTagGateway->insertAndUpdate(['tag' => $tag], ['tag' => $tag]);
     }
 
-    // Send Notification Eevent when a new record is submitted
-    $notificationGateway = $container->get(NotificationGateway::class);
+    // Send Notification Event when a new record is submitted
+    $notificationGateway = $container->get(NotificationGateway::class); 
+    $notificationList = !empty($_POST['notificationList'])? explode(',', $_POST['notificationList']) : [];
+    $personName = Format::name('', $session->get('preferredName'), $session->get('surname'), 'Staff', false, true);
+
     $notificationSender = new NotificationSender($notificationGateway, $session);
     $event = new NotificationEvent('Professional Development', 'New Portfolio Record');
 
