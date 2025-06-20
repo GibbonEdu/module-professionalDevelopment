@@ -18,6 +18,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 CHANGELOG
 =========
+v0.0.08
+-------
+Replaced $gibbon->session to $session. "$gibbon->session" is now deprecated.
 
 v0.0.07
 -------
