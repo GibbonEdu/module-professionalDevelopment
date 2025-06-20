@@ -60,7 +60,8 @@ INSERT INTO `gibbonAction` (`gibbonModuleID`, `name`, `precedence`, `category`, 
 // v0.0.06
 $count++;
 $sql[$count][0] = "0.0.06";
-$sql[$count][1] = "INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `type`, `scopes`, `active`) VALUES ('New Portfolio Record', 'Professional Development', 'New Portfolio Record_all', 'Additional', 'All', 'Y');end
+$sql[$count][1] = "
+INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `type`, `scopes`, `active`) VALUES ('New Portfolio Record', 'Professional Development', 'New Portfolio Record_all', 'Additional', 'All', 'Y');end
 ";
 
 // v0.0.07
@@ -77,3 +78,13 @@ INSERT INTO `gibbonPermission` (`gibbonRoleID` ,`gibbonActionID`) VALUES ('001',
 $count++;
 $sql[$count][0] = "0.0.08";
 $sql[$count][1] = "";
+
+// v0.0.09
+$count++;
+$sql[$count][0] = "0.0.09";
+$sql[$count][1] = "
+ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `timeSpent` `timeSpent` DECIMAL(7,5) NOT NULLL;end
+ALTER TABLE `professionalDevelopmentRequests` DROP COLUMN `attendeeRole`;end
+ALTER TABLE `professionalDevelopmentRequests` DROP COLUMN `attendeeCount`;end
+INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'pdTypes', 'PD Types', 'A comma separated list of available options for PD.', 'Conference, Training')
+";

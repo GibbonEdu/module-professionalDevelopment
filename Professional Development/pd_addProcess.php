@@ -43,8 +43,14 @@ $edit = false;
 $mode = $_REQUEST['mode'] ?? '';
 $saveMode = $_REQUEST['saveMode'] ?? 'Submit';
 $professionalDevelopmentRequestID = $_REQUEST['professionalDevelopmentRequestID'] ?? '';
+$gibbonPersonID = $session->get('gibbonPersonID') ?? '';
+$gibbonSchoolYearID = $session->get('gibbonSchoolYearID') ?? '';
 
 $requestsGateway = $container->get(RequestsGateway::class);
+$settingGateway = $container->get(SettingGateway::class);
+$requestDaysGateway = $container->get(RequestDaysGateway::class);
+$requestPersonGateway = $container->get(RequestPersonGateway::class);
+$requestCostGateway = $container->get(RequestCostGateway::class);
 
 // Check if a mode and id are given
 if (!empty($mode) && !empty($professionalDevelopmentRequestID)) {
@@ -59,8 +65,6 @@ if (!empty($mode) && !empty($professionalDevelopmentRequestID)) {
 }
 
 $isDraft = !empty($pdRequest) && $pdRequest['status'] == 'Draft';
-
-$gibbonPersonID = $session->get('gibbonPersonID');
 $personName = Format::name('', $session->get('preferredName'), $session->get('surname'), 'Staff', false, true);
 
 $highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/pd_manage.php', $connection2);
@@ -76,19 +80,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 } else {
     $URL .= '/pd_add.php&professionalDevelopmentRequestID='.$professionalDevelopmentRequestID.'&mode='.$mode;
 
-    $gibbonSchoolYearID = $session->get('gibbonSchoolYearID');
-
-    $settingGateway = $container->get(SettingGateway::class);
-
+    
     $partialFail = false;
     $returnCode = '';
 
-    // Format: Key => Required Flag
     $requestData = [
         'eventType'             => true,
         'eventFocus'            => true,
-        'attendeeRole'          => true,
-        'attendeeCount'         => true,
         'eventTitle'            => true,
         'eventDescription'      => true,
         'eventLocation'         => true,
@@ -163,17 +161,20 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     }
 
     // Add or edit Request Days
-    $requestDaysGateway = $container->get(RequestDaysGateway::class);
-
     $dateIDs = [];
     $dateTimeOrder = $_POST['dateTimeOrder'] ?? [];
+
+    if (empty($dateTimeOrder)) {
+        $partialFail = true;
+        $returnCode = 'warning4';
+    }
 
     foreach ($dateTimeOrder as $order) {
         $day = $_POST['dateTime'][$order];
 
         if (!$day['date']) {
             $partialFail = true;
-            $returnCode = 'warning7';
+            $returnCode = 'warning4';
             continue;
         }
 
@@ -198,8 +199,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $requestDaysGateway->deleteDatesNotInList($professionalDevelopmentRequestID, $dateIDs);
 
     // Add or edit Request Cost
-    $requestCostGateway = $container->get(RequestCostGateway::class);
-
     $costIDs = [];
     $costOrder = $_POST['costOrder'] ?? [];
 
@@ -235,8 +234,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $requestCostGateway->deleteCostsNotInList($professionalDevelopmentRequestID, $costIDs);
 
     // Load People in the PD Request
-    $requestPersonGateway = $container->get(RequestPersonGateway::class);
-
     $personIDs = [];
     $participantOrder = $_POST['participantOrder'] ?? [];
 

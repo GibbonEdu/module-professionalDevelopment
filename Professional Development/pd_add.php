@@ -35,10 +35,11 @@ $edit = false;
 $mode = $_REQUEST['mode'] ?? '';
 $professionalDevelopmentRequestID = $_REQUEST['professionalDevelopmentRequestID'] ?? '';
 
+$requestsGateway = $container->get(RequestsGateway::class);
+
 // Check if a mode and Request ID are given
 if (!empty($mode) && !empty($professionalDevelopmentRequestID)) {
     //Get PD request from gateway
-    $requestsGateway = $container->get(RequestsGateway::class);
     $pdRequest = $requestsGateway->getByID($professionalDevelopmentRequestID);    
 
     // If the PD request exists, set to edit mode
@@ -66,6 +67,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $gibbonSchoolYearID = $session->get('gibbonSchoolYearID');
 
     $settingGateway = $container->get(SettingGateway::class);
+    $requestPersonGateway = $container->get(RequestPersonGateway::class);
 
     $eventTypes = $settingGateway->getSettingByScope('Professional Development', 'eventTypes');
     $areasOfFocus = $settingGateway->getSettingByScope('Professional Development', 'areasOfFocus');
@@ -329,7 +331,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         }
         
         // Get People Data and add to DataBlocks
-        $requestPersonGateway = $container->get(RequestPersonGateway::class);
         $requestPersonCriteria = $requestPersonGateway->newQueryCriteria()
         ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID);
 

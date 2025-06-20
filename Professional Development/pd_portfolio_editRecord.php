@@ -65,13 +65,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $row->addHeading(__('Record Details', __('Record Details')));
         
     $row = $form->addRow();
-        $row->addLabel('type', __('Type'));
+        $row->addLabel('type', __('PD Type'));
         $row->addTextField('type')
             ->required()
             ->readonly(!$edit);
 
     $row = $form->addRow();
-        $row->addLabel('title', __('Title'));
+        $row->addLabel('title', __('PD Title'));
         $row->addTextField('title')
             ->required()
             ->readonly(!$edit);
@@ -115,10 +115,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             ->readonly(!$edit);
 
     $row = $form->addRow();
-        $row->addLabel('resourcesLinks', __('Resource Link'))
-            ->description(__('Share the resource/website link.'));
+            $row->addLabel('resourcesLinks', __('Resource Link'))->description(__('Share the resource/website link.'));
+
+    if (!$edit && !empty($portfolioRecord['resourcesLinks'])) {
+        $row->addContent(Format::link($portfolioRecord['resourcesLinks'], __('View Resource'), ['target' => '_blank']));
+    } else {
         $row->addURL('resourcesLinks')
             ->readonly(!$edit);
+    }
 
     $row = $form->addRow();
         $col = $row->addColumn();

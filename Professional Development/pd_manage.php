@@ -54,21 +54,21 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     // Settings
     $settingGateway = $container->get(SettingGateway::class);
+    $requestsGateway = $container->get(RequestsGateway::class);
+    $requestApproversGateway = $container->get(RequestApproversGateway::class);
+    $requestDaysGateway = $container->get(RequestDaysGateway::class);
 
     $requestApprovalType = $settingGateway->getSettingByScope('Professional Development', 'requestApprovalType');
     $headApproval = $settingGateway->getSettingByScope('Professional Development', 'headApproval');
     $expiredUnapproved = $settingGateway->getSettingByScope('Professional Development', 'expiredUnapprovedFilter');
 
     // Permissions
-    $requestApproversGateway = $container->get(RequestApproversGateway::class);
-
     $approver = $requestApproversGateway->selectApproverByPerson($gibbonPersonID);
     $isApprover = !empty($approver);
     $finalApprover = $isApprover ? boolval($approver['finalApprover']) : false;
 
     $checkAwaitingApproval = ($isApprover && $requestApprovalType == 'Chain Of All') || ($headApproval && $finalApprover);
 
-    
     if ($highestAction == 'Manage Applications_full') {
         // Department Data
         $departmentGateway = $container->get(DepartmentGateway::class);
@@ -105,8 +105,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     echo $form->getOutput();
 
     // Professional Development Request Data
-    $requestDaysGateway = $container->get(RequestDaysGateway::class);
-    $requestsGateway = $container->get(RequestsGateway::class);
     $criteria = $requestsGateway->newQueryCriteria(true)
         ->searchBy($requestsGateway->getSearchableColumns(), $search)
         ->sortBy('firstDayOfTrip', 'DESC')
@@ -165,132 +163,138 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         return $request['eventTitle'].($request['status'] == 'Draft' ? Format::tag(__('Draft'), 'message ml-2') : '');
     });
 
-$table->addColumn('owner', __('Owner'))
-    ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]))
-    ->sortable('surname');
+    $table->addColumn('owner', __('Owner'))
+        ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]))
+        ->sortable('surname');
 
-$table->addColumn('firstDayOfTrip', __('First Day'))
-    ->format(Format::using('dateReadable', ['firstDayOfTrip']));
+    $table->addColumn('firstDayOfTrip', __('First Day'))
+        ->format(Format::using('dateReadable', ['firstDayOfTrip']));
 
-$table->addColumn('status', __('Status'))->format(function($request) {
-    $output = $request['status'];
-    $output .= $request['canApprove'] == 'Y' && $request['status'] == 'Requested' 
-        ? Format::tag(__m('Awaiting Approval'), 'message ml-2') 
-        : '';
+    $table->addColumn('status', __('Status'))->format(function($request) {
+        $output = $request['status'];
+        $output .= $request['canApprove'] == 'Y' && $request['status'] == 'Requested' 
+            ? Format::tag(__m('Awaiting Approval'), 'message ml-2') 
+            : '';
 
-    return $output;
-});
+        return $output;
+    });
 
-$table->addColumn('expenseSubmission', __('Expenses'))
-    ->format(function ($request) {
-        $status = __('N/A');
-        $tag = 'dull';
-        
-        if ($request['expenseRequest'] == 'Individual') {
-            $status = __('Submitted');
-            $tag = 'message';
+    $table->addColumn('expenseSubmission', __('Expenses'))
+        ->format(function ($request) {
+            
+            if ($request['status'] == 'Approved') {
+                $status = '';
+                $tag= '';
 
-            foreach ($request['participants'] as $participant) {
-                if (empty($participant['gibbonFinanceExpenseID'])) {
+                if ($request['expenseRequest'] == 'Individual') {
+                    $status = __('Submitted');
+                    $tag = 'success';
+
+                    foreach ($request['participants'] as $participant) {
+                        if (empty($participant['gibbonFinanceExpenseID'])) {
+                            $status = __('Pending');
+                            $tag = 'warning';
+                            break;
+                        }
+                    }
+                } else if ($request['expenseRequest'] == 'Group Leader') {
                     $status = __('Pending');
                     $tag = 'warning';
-                    break;
-                }
-            }
-        } else if ($request['expenseRequest'] == 'Group Leader') {
-            $status = __('Pending');
-            $tag = 'warning';
 
-            $groupLeaderSubmitted = array_filter($request['participants'], function ($participant) use ($request) {
-                return $participant['gibbonPersonID'] == $request['gibbonPersonIDCreated'] && !empty($participant['gibbonFinanceExpenseID']);
-            });
+                    $groupLeaderSubmitted = array_filter($request['participants'], function ($participant) use ($request) {
+                        return $participant['gibbonPersonID'] == $request['gibbonPersonIDCreated'] && !empty($participant['gibbonFinanceExpenseID']);
+                    });
 
-            if (!empty($groupLeaderSubmitted)) {
-                $status = __('Submitted');
-                $tag = 'message';
-            }
-        }
-
-        return Format::tag($status, $tag);
-    });
-
-$table->addActionColumn()
-        ->addParam('professionalDevelopmentRequestID')
-        ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
-        ->format(function ($request, $actions) use ($container, $gibbonPersonID, $highestAction, $requestDaysGateway)  {
-
-            if (needsApproval($container, $gibbonPersonID, $request['professionalDevelopmentRequestID'])) {
-                $actions->addAction('approve', __('Approve/Reject'))
-                    ->setURL('/modules/Professional Development/pd_approve.php')
-                    ->setIcon('iconTick');
-            }
-
-            $actions->addAction('view', __('View Details'))
-                ->setURL('/modules/Professional Development/pd_view.php');
-
-            $newPDExpenseParams = ['professionalDevelopmentRequestID' => $request['professionalDevelopmentRequestID'], 'title' => 'Professional Development - '. $request['eventTitle'], 'eventDescription' => $request['eventDescription'], 'expenseRequest' => $request['expenseRequest']];
-
-            // Check if the user is a participant
-            $isParticipant = array_search($gibbonPersonID, array_column($request['participants'], 'gibbonPersonID')) !== false;
-
-            // Check if the user has already submitted an expense request
-            $hasSubmitted = array_filter($request['participants'], function ($participant) use ($gibbonPersonID) {
-                return $participant['gibbonPersonID'] == $gibbonPersonID && !empty($participant['gibbonFinanceExpenseID']);
-            });
-
-            if ($request['status'] == 'Approved' && $isParticipant) {
-                if ($request['expenseRequest'] == 'Group Leader' && $gibbonPersonID == $request['gibbonPersonIDCreated']) {
-                    if (empty($hasSubmitted)) {
-                        $actions->addAction('add', __('Add Expense Request'))
-                            ->setIcon('payment')
-                            ->addParams($newPDExpenseParams)
-                            ->setURL('/modules/Professional Development/pd_addExpenseRequest.php')
-                            ->displayLabel();
-                    } else {
-                        $actions->addAction('viewExpense', __('View Submitted Expense Request'))
-                            ->setIcon('check')
-                            ->setURL('/modules/Finance/expenseRequest_manage.php')
-                            ->displayLabel();
-                    }
-                } else if ($request['expenseRequest'] == 'Individual') {
-                    if (empty($hasSubmitted)) {
-                        $actions->addAction('add', __('Add Expense Request'))
-                            ->setIcon('payment')
-                            ->addParams($newPDExpenseParams)
-                            ->setURL('/modules/Professional Development/pd_addExpenseRequest.php')
-                            ->displayLabel();
-                    } else {
-                        $actions->addAction('viewExpense', __('View Submitted Expense Request'))
-                            ->setIcon('check')
-                            ->setURL('/modules/Finance/expenseRequest_manage.php')
-                            ->displayLabel();
+                    if (!empty($groupLeaderSubmitted)) {
+                        $status = __('Submitted');
+                        $tag = 'success';
                     }
                 }
 
-                 // Get the final date of the trip
-                $daysCriteria = $requestDaysGateway->newQueryCriteria()
-                    ->filterBy('professionalDevelopmentRequestID', $request['professionalDevelopmentRequestID'])
-                    ->sortBy(['date'], 'DESC');
+                return Format::tag($status, $tag);
+            }
 
-                $days = $requestDaysGateway->queryRequestDays($daysCriteria)->toArray();
-                $lastDay = $days[0]['date'] ?? '';
-                $currentDate = date('Y-m-d');
+            return '';
+        });
 
-                if ($currentDate >= $lastDay) {
-                    $actions->addAction('addPortfolioRecord', __('Add Record for Portfolio'))
-                            ->setIcon('document')
-                            ->setURL('/modules/Professional Development/pd_portfolio_addRecord.php')
-                            ->addParams(['professionalDevelopmentRequestID' => $request['professionalDevelopmentRequestID']])
-                            ->displayLabel();
+    $table->addActionColumn()
+            ->addParam('professionalDevelopmentRequestID')
+            ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
+            ->format(function ($request, $actions) use ($container, $gibbonPersonID, $highestAction, $requestDaysGateway)  {
+
+                $newPDExpenseParams = ['professionalDevelopmentRequestID' => $request['professionalDevelopmentRequestID'], 'title' => 'Professional Development - '. $request['eventTitle'], 'eventDescription' => $request['eventDescription'], 'expenseRequest' => $request['expenseRequest']];
+
+                // Check if the user is a participant
+                $isParticipant = array_search($gibbonPersonID, array_column($request['participants'], 'gibbonPersonID')) !== false;
+
+                // Check if the user has already submitted an expense request
+                $hasSubmitted = array_filter($request['participants'], function ($participant) use ($gibbonPersonID) {
+                    return $participant['gibbonPersonID'] == $gibbonPersonID && !empty($participant['gibbonFinanceExpenseID']);
+                });
+
+                if ($request['status'] == 'Approved' && $isParticipant) {
+
+                    // Get the final date of the trip
+                    $daysCriteria = $requestDaysGateway->newQueryCriteria()
+                        ->filterBy('professionalDevelopmentRequestID', $request['professionalDevelopmentRequestID'])
+                        ->sortBy(['date'], 'DESC');
+
+                    $days = $requestDaysGateway->queryRequestDays($daysCriteria)->toArray();
+                    $lastDay = $days[0]['date'] ?? '';
+                    $currentDate = date('Y-m-d');
+
+                    if ($currentDate >= $lastDay) {
+                        $actions->addAction('addPortfolioRecord', __('Add to Portfolio'))
+                                ->setIcon('document')
+                                ->setURL('/modules/Professional Development/pd_portfolio_addRecord.php')
+                                ->addParams(['professionalDevelopmentRequestID' => $request['professionalDevelopmentRequestID']])
+                                ->displayLabel();
+                    }
+
+                    if ($request['expenseRequest'] == 'Group Leader' && $gibbonPersonID == $request['gibbonPersonIDCreated']) {
+                        if (empty($hasSubmitted)) {
+                            $actions->addAction('add', __('Add Expense'))
+                                ->setIcon('payment')
+                                ->addParams($newPDExpenseParams)
+                                ->setURL('/modules/Professional Development/pd_addExpenseRequest.php')
+                                ->displayLabel();
+                        } else {
+                            $actions->addAction('viewExpense', __('View Expense'))
+                                ->setIcon('check')
+                                ->setURL('/modules/Finance/expenseRequest_manage.php')
+                                ->displayLabel();
+                        }
+                    } else if ($request['expenseRequest'] == 'Individual') {
+                        if (empty($hasSubmitted)) {
+                            $actions->addAction('add', __('Add Expense'))
+                                ->setIcon('payment')
+                                ->addParams($newPDExpenseParams)
+                                ->setURL('/modules/Professional Development/pd_addExpenseRequest.php')
+                                ->displayLabel();
+                        } else {
+                            $actions->addAction('viewExpense', __('View Expense'))
+                                ->setIcon('check')
+                                ->setURL('/modules/Finance/expenseRequest_manage.php')
+                                ->displayLabel();
+                        }
+                    }
                 }
-            }
- 
-            if (($highestAction == 'Manage Applications_full' || $gibbonPersonID == $request['gibbonPersonIDCreated']) && !in_array($request['status'], ['Cancelled', 'Rejected'])) {
-                $actions->addAction('edit', __('Edit'))
-                    ->addParam('mode', 'edit')
-                    ->setURL('/modules/Professional Development/pd_add.php');
-            }
-    });
+
+                if (needsApproval($container, $gibbonPersonID, $request['professionalDevelopmentRequestID'])) {
+                    $actions->addAction('approve', __('Approve/Reject'))
+                        ->setURL('/modules/Professional Development/pd_approve.php')
+                        ->setIcon('iconTick');
+                }
+
+                $actions->addAction('view', __('View Details'))
+                    ->setURL('/modules/Professional Development/pd_view.php');
+    
+                if (($highestAction == 'Manage Applications_full' || $gibbonPersonID == $request['gibbonPersonIDCreated']) && !in_array($request['status'], ['Cancelled', 'Rejected'])) {
+                    $actions->addAction('edit', __('Edit'))
+                        ->addParam('mode', 'edit')
+                        ->setURL('/modules/Professional Development/pd_add.php');
+                }
+            });
 
     echo $table->render($requests);
 }
