@@ -61,7 +61,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 } else if ((isset($pdRequest) && empty($pdRequest)) || (!empty($mode) && !$edit)) {
     $page->addError(__('Invalid Trip.'));
 } else {
-
     // Proceed
     $moduleName = $session->get('module');
     $gibbonSchoolYearID = $session->get('gibbonSchoolYearID');
@@ -107,7 +106,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $row->addSelect('eventType')->fromString($eventTypes)->required();
 
     $row = $form->addRow();
-        $row->addLabel('eventFocus', __('Area of Focus'))->description(__m('Type of conference or training'));
+        $row->addLabel('eventFocus', __('Area of Focus'))->description(__m('Focus of conference or training'));
         $row->addSelect('eventFocus')->fromString($areasOfFocus)->required();
 
     $form->toggleVisibilityByClass('eventFocus')->onSelect('eventFocus')->when('Other');
@@ -204,7 +203,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     // Template for Cost Block
     $costBlock = $form->getFactory()->createTable()->setClass('blank');
         $row = $costBlock->addRow();
-            // $row->addLabel('title', __('Type'));
             $row->addSelect('title')
                 ->fromString($expenseOptions)
                 ->required()
