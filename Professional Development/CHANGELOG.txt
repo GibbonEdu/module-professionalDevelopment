@@ -20,6 +20,10 @@ CHANGELOG
 =========
 v0.0.08
 -------
+Added new PD Type options
+
+v0.0.08
+-------
 Replaced $gibbon->session to $session. "$gibbon->session" is now deprecated.
 
 v0.0.07
