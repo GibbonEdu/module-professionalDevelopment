@@ -104,10 +104,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $row = $form->addRow();
         $row->addHeading('Record Details', __('Record Details'));
 
-    $eventTypes = $settingGateway->getSettingByScope('Professional Development', 'eventTypes');
+    $pdTypes = $settingGateway->getSettingByScope('Professional Development', 'pdTypes');
     $row = $form->addRow();
         $row->addLabel('type', __('PD Type'));
-        $row->addSelect('type')->fromString($eventTypes)->selected($pdRequest['eventType'] ?? '')->required()->placeholder();
+        $row->addSelect('type')->fromString($pdTypes)->required()->placeholder();
 
     $row = $form->addRow();
         $row->addLabel('title', __('PD Name'));
@@ -126,7 +126,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $row = $form->addRow();
         $row->addLabel('timeSpent', __('Time spent (Hours)'));
-        $row->addNumber('timeSpent')->decimalPlaces(1)->minimum(0)->maximum(999)->maxLength(3)->required();
+        $row->addNumber('timeSpent')->decimalPlaces(2)->minimum(0)->maximum(999)->maxLength(3)->required();
 
     $tags = $portfolioTagGateway->selectAllKeyFocusTags()->fetchAll(\PDO::FETCH_COLUMN);
     $row = $form->addRow();

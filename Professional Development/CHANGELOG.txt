@@ -18,9 +18,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 CHANGELOG
 =========
-v0.0.08
+v0.0.09
 -------
-Added new PD Type options
+Added new PD Type options for Portfolio
+Added the total cost table in Add Expense Request Page
 
 v0.0.08
 -------

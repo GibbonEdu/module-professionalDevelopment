@@ -83,8 +83,6 @@ $sql[$count][1] = "";
 $count++;
 $sql[$count][0] = "0.0.09";
 $sql[$count][1] = "
-ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `timeSpent` `timeSpent` DECIMAL(7,5) NOT NULLL;end
-ALTER TABLE `professionalDevelopmentRequests` DROP COLUMN `attendeeRole`;end
-ALTER TABLE `professionalDevelopmentRequests` DROP COLUMN `attendeeCount`;end
-INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'pdTypes', 'PD Types', 'A comma separated list of available options for PD.', 'Conference, Training')
+ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `timeSpent` `timeSpent` DECIMAL(7,5) NOT NULL;end
+INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'pdTypes', 'PD Types', 'A comma separated list of available types for PD.', 'Conference,Training')
 ";

@@ -111,12 +111,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $table->addColumn('role', __('Role'));
 
-    $table->addColumn('timeSpent', __('Time Spent'))->format(function($record) {
-        $output = $record['timeSpent'];
-        $output .= ' hours';
-        return $output;
+    $table->addColumn('timeSpent', __('Time Spent'))
+        ->format(function($record) {
+            $output = number_format(floatval($record['timeSpent']), 2).' '.__('hours');
+            return $output;
     });
-    
+
     $table->addActionColumn()
         ->addParam('professionalDevelopmentPortfolioID')
         ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)

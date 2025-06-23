@@ -126,7 +126,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
                     // Show the cost Breakdown Table
                     $row = $form->addRow();
-                        $row->addHeading(__('PD Cost Breakdown'));
+                        $row->addHeading(__('PD Expense Breakdown'));
                 
                     $row = $form->addRow()->addClass('costBreakdown');
                 
@@ -134,6 +134,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                     $costCriteria = $requestCostGateway->newQueryCriteria()
                         ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID);
                     $requestCosts = $requestCostGateway->queryRequestCost($costCriteria);
+
+                    $totalExpense = array_reduce($requestCosts->toArray(), function ($group, $item) {
+                        $group += floatval($item['cost']) * floatval($item['quantity']);
+                        return $group;
+                    }, 0);
                 
                     $table = DataTable::create('costBreakdown');
                 
@@ -145,6 +150,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                     $row->addContent($table->render($requestCosts));
 
                     $row = $form->addRow();
+                        $row->addLabel('totalExpense', Format::bold(__('Total PD Expense')));
+                        $row->addTextField('totalExpense')
+                            ->setValue(Format::currency($totalExpense))
+                            ->readOnly();
+
+                    $row = $form->addRow();
                     $row->addLabel('expenseRequestLabel', __('Expense Request Application By'))
                         ->description(__('Who will submit the expense request?'));
                     $row->addTextField('expenseRequest')
@@ -152,7 +163,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                         ->readonly();
 
                     $row = $form->addRow();
-                    	$row->addLabel('cost', __('Total Expense'));
+                    	$row->addLabel('cost', __('Cost'));
             			$row->addCurrency('cost')->required()->maxLength(15);
 
                     $row = $form->addRow();
