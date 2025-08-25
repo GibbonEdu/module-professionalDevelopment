@@ -98,12 +98,16 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             ->placeholder(__('Date'))
             ->setClass('w-auto');
 
+    if (isset($portfolioRecord['timeSpent'])) {
+    $portfolioRecord['timeSpent'] = number_format((float)$portfolioRecord['timeSpent'], 2, '.', '');
+    }
+
     $row = $form->addRow();
         $row->addLabel('timeSpent', __('Time spent (Hours)'));
-        $row->addNumber('timeSpent')->decimalPlaces(1)->minimum(0)->maximum(999)->maxLength(3)
+        $row->addNumber('timeSpent')->decimalPlaces(2)->minimum(0)->maximum(999)->maxLength(3)
             ->required()
             ->readonly(!$edit);
-
+            
     $tags = $container->get(PortfolioTagGateway::class)->selectAllKeyFocusTags()->fetchAll(\PDO::FETCH_COLUMN);
     
     $row = $form->addRow();

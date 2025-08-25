@@ -160,8 +160,8 @@ function requestCommentNotifications($professionalDevelopmentRequestID, $gibbonP
 function renderRequest(ContainerInterface $container, $professionalDevelopmentRequestID, $approveMode, $readOnly = false, $showLogs = true)
 {
     global $session;
-    $gibbonPersonID = $session->get('gibbonPersonID');
-    $moduleName = $session->get('module');
+    $gibbonPersonID = $session->get('gibbonPersonID') ?? "";
+    $moduleName = $session->get('module') ?? "";
     $requestsGateway = $container->get(RequestsGateway::class);
     $pdRequest = $requestsGateway->getByID($professionalDevelopmentRequestID);
     $applicant = $container->get(UserGateway::class)->getByID($pdRequest['gibbonPersonIDCreated'], ['preferredName', 'surname']);
@@ -293,12 +293,12 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
         toggleSection($row, 'participants', $on);
 
     $requestPersonGateway = $container->get(RequestPersonGateway::class);
-        $peopleCriteria = $requestPersonGateway->newQueryCriteria()
-            ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
-            ->sortBy(['surname', 'preferredName'])
-            ->pageSize(0);
+    $peopleCriteria = $requestPersonGateway->newQueryCriteria()
+        ->filterBy('professionalDevelopmentRequestID', $professionalDevelopmentRequestID)
+        ->sortBy(['surname', 'preferredName'])
+        ->pageSize(0);
     $participants = $requestPersonGateway->queryRequestPeople($peopleCriteria);
-
+    
     $row = $form->addRow()->addClass('participants');
         $gridRenderer = new GridView($container->get('twig'));
         $table = $container->get(DataTable::class)->setRenderer($gridRenderer);
@@ -317,6 +317,14 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
         ->setClass('text-xxs');
 
     $row->addContent($table->render($participants));
+
+    if ($gibbonPersonID == $pdRequest['gibbonPersonIDCreated']) {
+        $applicantPartcipant = in_array($pdRequest['gibbonPersonIDCreated'], array_column($participants->toArray(), 'gibbonPersonID'));
+
+        if(!$applicantPartcipant) {
+            $form->addRow()->addContent(Format::alert(__m('As the PD applicant, you have not added yourself as a participant. If you wish to include this record in your own PD Portfolio, please edit this PD application and add yourself as a participant.'), 'warning'));
+        }
+    }
 
     $row = $form->addRow();
         $row->addHeading(__('Cost Breakdown'));
