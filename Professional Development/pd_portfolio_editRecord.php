@@ -23,6 +23,7 @@ use Gibbon\Forms\Form;
 use Gibbon\Services\Format;
 use Gibbon\Domain\User\UserGateway;
 use Gibbon\Forms\DatabaseFormFactory;
+use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\PortfolioGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\PortfolioTagGateway;
 
@@ -38,6 +39,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $gibbonPersonID = $session->get('gibbonPersonID');
 
     $portfolioGateway = $container->get(PortfolioGateway::class);
+    $settingGateway = $container->get(SettingGateway::class);
+
     if (!empty($professionalDevelopmentPortfolioID) && $portfolioGateway->exists($professionalDevelopmentPortfolioID)) {
         $portfolioRecord = $portfolioGateway->getByID($professionalDevelopmentPortfolioID);
     } else {
@@ -63,15 +66,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $row = $form->addRow();
         $row->addHeading(__('Record Details', __('Record Details')));
-        
+
+    $pdTypes = $settingGateway->getSettingByScope('Professional Development', 'pdTypes');
     $row = $form->addRow();
-        $row->addLabel('type', __('Type'));
-        $row->addTextField('type')
-            ->required()
-            ->readonly(!$edit);
+        $row->addLabel('type', __('PD Type'));
+        $row->addSelect('type')->fromString($pdTypes)->required()->readonly(!$edit);
 
     $row = $form->addRow();
-        $row->addLabel('title', __('Title'));
+        $row->addLabel('title', __('PD Title'));
         $row->addTextField('title')
             ->required()
             ->readonly(!$edit);
@@ -82,12 +84,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $row->addLabel('applicant', __('Applicant'));
             $row->addContent(Format::nameLinked($portfolioRecord['gibbonPersonID'], '', $applicant['preferredName'], $applicant['surname'], 'Staff', false, true))
                 ->wrap('<div class="text-left w-full text-sm">', '</div>');
-
+                
+    $participantRoles = $settingGateway->getSettingByScope('Professional Development', 'participantRoles');
     $row = $form->addRow();
-            $row->addLabel('role', __('Role'));
-            $row->addTextField('role')
-                ->required()
-                ->readonly(!$edit);
+        $row->addLabel('role', __('PD Role'));
+        $row->addSelect('role')->fromString($participantRoles)->required()->readonly(!$edit);
     
     $row = $form->addRow();
         $row->addLabel('completionDate', __('Date of Completion'))->description(__('Last date of the activity'));
@@ -104,7 +105,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             ->readonly(!$edit);
 
     $tags = $container->get(PortfolioTagGateway::class)->selectAllKeyFocusTags()->fetchAll(\PDO::FETCH_COLUMN);
-
+    
     $row = $form->addRow();
         $col = $row->addColumn();
         $col->addLabel('keyFocus', __('Key Focus'));
@@ -115,10 +116,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             ->readonly(!$edit);
 
     $row = $form->addRow();
-        $row->addLabel('resourcesLinks', __('Resource Link'))
-            ->description(__('Share the resource/website link.'));
+            $row->addLabel('resourcesLinks', __('Resource Link'))->description(__('Share the resource/website link.'));
+
+    if (!$edit && !empty($portfolioRecord['resourcesLinks'])) {
+        $row->addContent(Format::link($portfolioRecord['resourcesLinks'], __('View Resource'), ['target' => '_blank']));
+    } else {
         $row->addURL('resourcesLinks')
             ->readonly(!$edit);
+    }
 
     $row = $form->addRow();
         $col = $row->addColumn();

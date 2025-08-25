@@ -510,6 +510,18 @@ function getSettings(ContainerInterface $container, $guid)
         ->setProcessor(function ($data) {
             return $data ?? '';
         });
+
+    $settingFactory->addSetting('pdTypes')
+    ->setRenderer(function ($data, $row) {
+        $row->addTextArea($data['name'])
+            ->setRows(2)
+            ->required()
+            ->setValue($data['value'] ?? '');
+    })
+    ->setProcessor(function ($data) {
+        return $data ?? '';
+    });
+
     $settingFactory->addSetting('areasOfFocus')
         ->setRenderer(function ($data, $row) {
             $row->addTextArea($data['name'])
