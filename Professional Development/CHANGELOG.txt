@@ -18,6 +18,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 CHANGELOG
 =========
+v0.0.10
+-------
+Added a warniong if the PD applicant is not a participant
+Fixed how time spent is displayed in the PD Portfolio
+
 v0.0.09
 -------
 Added new PD Type options for Portfolio

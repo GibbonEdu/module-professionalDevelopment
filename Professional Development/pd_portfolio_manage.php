@@ -98,7 +98,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         });
 
     $table->addColumn('recordTitle', __('Title'));
-    $table->addColumn('type', __('type'));
+    $table->addColumn('type', __('Type'));
     
     $table->addColumn('gibbonPersonID', __('Staff'))
         ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]))
@@ -113,7 +113,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $table->addColumn('timeSpent', __('Time Spent'))
         ->format(function($record) {
-            $output = number_format(floatval($record['timeSpent']), 2).' '.__('hours');
+            $output = number_format(floatval($record['timeSpent']), 2).' '.__('hour(s)');
             return $output;
     });
 

@@ -27,7 +27,7 @@ $description = 'A Professional Development (PD) module for Gibbon to record Staf
 $entryURL    = "pd_manage.php";   // The landing page for the unit, used in the main menu
 $type        = "Additional";
 $category    = 'Other';
-$version     = '0.0.09';
+$version     = '0.0.10';
 $author      = 'Gibbon Foundation';
 $url         = 'https://github.com/GibbonEdu/module-professionalDevelopment';
 
@@ -105,7 +105,7 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentPortfolioTag` (`professi
 // Add gibbonSettings entries
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a request has to go through.', 'One Of')";
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'headApproval', 'Head Approval', 'A Final Approval is required before the request becomes approved.', '1')";
-$gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'expiredUnapprovedFilter', 'Disable View of Exipired Unapproved Requests', 'If selected then any request which has not been approved and has passed the initial start date will no longer be shown.', '0')";
+$gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'expiredUnapprovedFilter', 'Disable View of Expired Unapproved Requests', 'If selected then any request which has not been approved and has passed the initial start date will no longer be shown.', '0')";
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'eventTypes', 'Event Types', 'A comma separated list of available options.', 'Internal,External - Local,External - Overseas')";
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'areasOfFocus', 'Areas of Focus', 'A comma separated list of available options.', 'IB,IGCSE,SEN,Other')";
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'expenseOptions', 'Expense Options', 'A comma separated list of available options.', 'Registration Fee,Flight,Hotel (Recommended by organiser),Hotel (independent),Other cost (please provide details)')";

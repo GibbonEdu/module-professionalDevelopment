@@ -86,3 +86,9 @@ $sql[$count][1] = "
 ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `timeSpent` `timeSpent` DECIMAL(7,5) NOT NULL;end
 INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'pdTypes', 'PD Types', 'A comma separated list of available types for PD.', 'Conference,Training')
 ";
+
+// v0.0.10
+$count++;
+$sql[$count][0] = "0.0.10";
+$sql[$count][1] = "";
+
