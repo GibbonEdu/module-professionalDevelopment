@@ -84,7 +84,7 @@ $count++;
 $sql[$count][0] = "0.0.09";
 $sql[$count][1] = "
 ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `timeSpent` `timeSpent` DECIMAL(7,5) NOT NULL;end
-INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'pdTypes', 'PD Types', 'A comma separated list of available types for PD.', 'Conference,Training')
+INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'pdTypes', 'PD Types', 'A comma separated list of available types for PD.', 'Conference,Training');end
 ";
 
 // v0.0.10
@@ -92,3 +92,9 @@ $count++;
 $sql[$count][0] = "0.0.10";
 $sql[$count][1] = "";
 
+// v0.0.11
+$count++;
+$sql[$count][0] = "0.0.11";
+$sql[$count][1] = "
+UPDATE `professionalDevelopmentPortfolio` SET `professionalDevelopmentRequestID` = NULL WHERE `professionalDevelopmentRequestID` = 0000000000;end
+";
