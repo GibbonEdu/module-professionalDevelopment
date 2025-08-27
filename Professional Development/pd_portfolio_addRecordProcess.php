@@ -67,7 +67,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         }
     }
 
-    $portfolioData['professionalDevelopmentRequestID']  = $professionalDevelopmentRequestID;
+    if (!empty($professionalDevelopmentRequestID)) {
+        $portfolioData['professionalDevelopmentRequestID'] = $professionalDevelopmentRequestID;
+    }
+    
     $portfolioData['resourcesLinks'] = $_POST['resourcesLinks'] ?? '';
     $portfolioData['keyFocus'] = $_POST['keyFocus'] ?? '';
 

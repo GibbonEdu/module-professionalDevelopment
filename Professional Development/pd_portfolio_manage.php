@@ -92,6 +92,10 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $table->addExpandableColumn('contents')
         ->format(function ($record) {
+            if (empty($record['keyTakeaways'])) {
+                return;
+            }
+
             $output = '<h6>' . 'Key Takeaways' . '</h6></br>';
             $output .= nl2br($record['keyTakeaways']);
             return $output;
@@ -133,6 +137,3 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     echo $table->render($portfolio);
 }
-
-
-
