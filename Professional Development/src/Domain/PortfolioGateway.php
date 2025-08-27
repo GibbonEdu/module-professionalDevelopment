@@ -83,7 +83,13 @@ class PortfolioGateway extends QueryableGateway
     public function selectCoordinatorByDepartmentID($gibbonDepartmentID)
     {
         $data = ['gibbonDepartmentID' => $gibbonDepartmentID, 'role' => 'Coordinator'];
-        $sql = "SELECT gibbonDepartmentStaff.gibbonPersonID FROM gibbonDepartment JOIN gibbonDepartmentStaff ON (gibbonDepartmentStaff.gibbonDepartmentID=gibbonDepartment.gibbonDepartmentID) WHERE gibbonDepartment.gibbonDepartmentID=:gibbonDepartmentID AND gibbonDepartmentStaff.role=:role";
+        $sql = "SELECT gibbonDepartmentStaff.gibbonPersonID 
+        FROM gibbonDepartment 
+        JOIN gibbonDepartmentStaff ON (gibbonDepartmentStaff.gibbonDepartmentID=gibbonDepartment.gibbonDepartmentID) 
+        JOIN gibbonPerson ON (gibbonPerson.gibbonPersonID=gibbonDepartmentStaff.gibbonPersonID)
+        WHERE gibbonDepartment.gibbonDepartmentID=:gibbonDepartmentID 
+        AND gibbonDepartmentStaff.role=:role
+        AND gibbonPerson.status='Full'";
 
         return $this->db()->select($sql, $data);
     }

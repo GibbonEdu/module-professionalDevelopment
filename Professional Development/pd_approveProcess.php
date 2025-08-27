@@ -31,8 +31,6 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
 require_once '../../gibbon.php';
 require_once "./moduleFunctions.php";
 
-$_POST['address'] = '/modules/Professional Development/pd_manage.php';
-
 $absoluteURL = $session->get('absoluteURL');
 $moduleName = $session->get('module');
 $URL = $absoluteURL . '/index.php?q=/modules/' . $moduleName;

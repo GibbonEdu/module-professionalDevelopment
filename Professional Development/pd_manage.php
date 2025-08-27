@@ -142,7 +142,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     });
 
     $filters = array_reduce(getStatuses(), function($filters, $status) {
-        $filters['status:' . $status] = __('Status') . ': ' . __($status);
+        $filters['status::' . $status] = __('Status') . ': ' . __($status);
         return $filters;
     });
     
