@@ -19,6 +19,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 CHANGELOG
 =========
 
+v0.1.01
+-------
+Fixed the issue of redirecting user to edit page after editing a portfolio record
+
 v0.1.00
 -------
 Fixed the bug to allow admin to edit portfolio record of others and search by staff name
