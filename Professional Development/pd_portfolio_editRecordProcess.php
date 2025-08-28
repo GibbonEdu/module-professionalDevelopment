@@ -28,7 +28,7 @@ require_once '../../gibbon.php';
 $_POST = $container->get(Validator::class)->sanitize($_POST);
 $professionalDevelopmentPortfolioID = $_POST['professionalDevelopmentPortfolioID'] ?? '';
 
-$URL = $session->get('absoluteURL').'/index.php?q=/modules/Professional Development/pd_portfolio_editRecord.php&professionalDevelopmentPortfolioID='. $professionalDevelopmentPortfolioID;
+$URL = $session->get('absoluteURL').'/index.php?q=/modules/Professional Development/pd_portfolio_editRecord.php&professionalDevelopmentPortfolioID='. $professionalDevelopmentPortfolioID.'&mode=edit';
 
 if (isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_portfolio_manage.php') == false) {    
     $URL .= '&return=error0';
