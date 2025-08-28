@@ -30,17 +30,16 @@ $professionalDevelopmentPortfolioID = $_POST['professionalDevelopmentPortfolioID
 
 $URL = $session->get('absoluteURL').'/index.php?q=/modules/Professional Development/pd_portfolio_editRecord.php&professionalDevelopmentPortfolioID='. $professionalDevelopmentPortfolioID;
 
-if (isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_portfolio_manage.php') == false) {
+if (isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_portfolio_manage.php') == false) {    
     $URL .= '&return=error0';
     header("Location: {$URL}");
     exit;
 } else {
-
     // Proceed!
     $portfolioGateway = $container->get(PortfolioGateway::class);
     $portfolioTagGateway = $container->get(PortfolioTagGateway::class);
 
-    $highestAction = getHighestGroupedAction($guid, $_POST['address'], $connection2);
+    $highestAction = getHighestGroupedAction($guid, '/modules/Professional Development/pd_portfolio_manage.php', $connection2);
     $portfolioRecord = $portfolioGateway->getByID($professionalDevelopmentPortfolioID);
 
     if ($highestAction != 'Manage Portfolio_full' && $portfolioRecord['gibbonPersonID'] != $session->get('gibbonPersonID')) {
@@ -48,7 +47,7 @@ if (isActionAccessible($guid, $connection2, '/modules/Professional Development/p
         header("Location: {$URL}");
         exit;
     }
-
+    
     $data = [
         'role'                              => $_POST['role'],
         'type'                              => $_POST['type'],

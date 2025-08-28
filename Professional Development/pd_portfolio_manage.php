@@ -52,7 +52,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $form->setClass('noIntBorder fullWidth');
 
     $row = $form->addRow();
-        $row->addLabel('search', 'Search For')->description(__('Title, type, role, key focus'));
+        $row->addLabel('search', 'Search For')->description(__('Title, staff name, type, role, key focus'));
         $row->addTextField('search')->setValue($search);
 
     $row = $form->addRow();

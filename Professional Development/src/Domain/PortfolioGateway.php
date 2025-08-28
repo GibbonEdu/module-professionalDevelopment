@@ -36,9 +36,10 @@ class PortfolioGateway extends QueryableGateway
     use TableAware; 
     private static $tableName = 'professionalDevelopmentPortfolio'; 
     private static $primaryKey = 'professionalDevelopmentPortfolioID';
-    private static $searchableColumns = ['professionalDevelopmentPortfolio.title', 'type', 'role', 'keyFocus'];
+    private static $searchableColumns = ['professionalDevelopmentPortfolio.title', 'type', 'role', 'keyFocus', 'gibbonPerson.preferredName', 'gibbonPerson.surname'];
 
     public function queryPortfolio(QueryCriteria $criteria, $gibbonSchoolYearID, $gibbonPersonID = null) {
+        
         $query = $this->newQuery()
         ->from($this->getTableName())
         ->innerJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID = professionalDevelopmentPortfolio.gibbonPersonID')

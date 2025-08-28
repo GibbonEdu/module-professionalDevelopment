@@ -105,3 +105,8 @@ $sql[$count][0] = "0.0.12";
 $sql[$count][1] = "
 ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `keyTakeaways` `keyTakeaways` TEXT NOT NULL;end
 ";
+
+// v0.1.00
+$count++;
+$sql[$count][0] = "0.1.00";
+$sql[$count][1] = "";
