@@ -32,15 +32,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 } else {
     // Proceed  
     $highestManageAction = getHighestGroupedAction($guid, '/modules/Professional Development/pd_portfolio_manage.php', $connection2);
+    
+    $portfolioGateway = $container->get(PortfolioGateway::class);
+    $settingGateway = $container->get(SettingGateway::class);
 
     $professionalDevelopmentPortfolioID = $_GET['professionalDevelopmentPortfolioID'] ?? '';
     $mode = $_REQUEST['mode'] ?? '';
     $edit = false;
-    $gibbonPersonID = $session->get('gibbonPersonID');
-
-    $portfolioGateway = $container->get(PortfolioGateway::class);
-    $settingGateway = $container->get(SettingGateway::class);
-
+    $gibbonPersonID = $session->get('gibbonPersonID') ?? '';
+    
     if (!empty($professionalDevelopmentPortfolioID) && $portfolioGateway->exists($professionalDevelopmentPortfolioID)) {
         $portfolioRecord = $portfolioGateway->getByID($professionalDevelopmentPortfolioID);
     } else {
