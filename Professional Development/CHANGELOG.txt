@@ -21,6 +21,10 @@ CHANGELOG
 
 v0.1.01
 -------
+Increased the character limit for storing resource link
+
+v0.1.01
+-------
 Fixed the issue of redirecting user to edit page after editing a portfolio record
 
 v0.1.00
