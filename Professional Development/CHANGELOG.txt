@@ -19,7 +19,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 CHANGELOG
 =========
 
-v0.1.01
+v0.1.03
+-------
+Increased the character limit of tiltle for PD Protfolio
+
+v0.1.02
 -------
 Increased the character limit for storing resource link
 

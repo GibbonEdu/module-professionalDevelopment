@@ -122,3 +122,10 @@ $sql[$count][0] = "0.1.02";
 $sql[$count][1] = "
 ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `resourcesLinks` `resourcesLinks` VARCHAR(255) DEFAULT NULL;end
 ";
+
+// v0.1.03
+$count++;
+$sql[$count][0] = "0.1.03";
+$sql[$count][1] = "
+ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `title` `title` VARCHAR(100) NOT NULL;end
+";
