@@ -26,6 +26,7 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestCostGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestDaysGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestPersonGateway;
+use Gibbon\Services\Format;
 
 require_once __DIR__ . '/moduleFunctions.php';
 
@@ -150,7 +151,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                 ->required()
                 ->placeholder(__('Date'))
                 ->setClass('w-auto');
-            $row->addContent('')->setClass('w-24')->append("<input type='hidden' id='professionalDevelopmentRequestDaysID' name='professionalDevelopmentRequestDaysID' value=''/>");
 
     $dateTimeBlock->addRow()->addClass('h-2');
 
@@ -165,7 +165,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             ->settings([
                 'placeholder' => __m('Add the event dates here...'),
                 'sortable' => true,
-                'orderName' => 'dateTimeOrder'
+                'orderName' => 'dateTimeOrder',
+                'uniqueID' => 'professionalDevelopmentRequestDaysID',
             ])
             ->addToolInput($addDateTimeBlockButton);
 
@@ -179,8 +180,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $row->addSelectStaff('gibbonPersonID')->photo(false)
         ->setClass('flex-1 mr-1')
         ->required()
-        ->placeholder()
-        ->append("<input type='hidden' id='professionalDevelopmentRequestPersonID' name='professionalDevelopmentRequestPersonID' value=''/>");
+        ->placeholder();
     $row->addSelect('role')
         ->fromString($participantRoles)
         ->setClass('flex-1 mr-1');
@@ -195,7 +195,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     ->settings([
         'placeholder' => '',
         'sortable' => true,
-        'orderName' => 'participantOrder'
+        'orderName' => 'participantOrder',
+        'uniqueID' => 'professionalDevelopmentRequestPersonID',
         ])
     ->addToolInput($addParticipantBlockButton);
 
@@ -214,15 +215,14 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             $row->addNumber('quantity')
                 ->onlyInteger(true)
                 ->required()
-                ->setClass('w-12')
+                ->setClass('w-24')
                 ->setValue('1');
 
             $row->addLabel('cost', __('Amount'));
             $row->addCurrency('cost')
                 ->required()
                 ->addClass('')
-                ->minimum(0)
-                ->append("<input type='hidden' id='professionalDevelopmentRequestCostID' name='professionalDevelopmentRequestCostID' value=''/>");
+                ->minimum(0);
 
         $row = $costBlock->addRow();
             $col = $row->addColumn();
@@ -243,7 +243,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                 ->settings([
                     'placeholder' => '',
                     'sortable' => true,
-                    'orderName' => 'costOrder'
+                    'orderName' => 'costOrder',
+                    'uniqueID' => 'professionalDevelopmentRequestCostID',
                 ])
                 ->addToolInput($addCostBlockButton);
     
@@ -311,7 +312,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                 'description' => $cost['description'],
                 'cost'        => $cost['cost'],
                 'quantity'    => $cost['quantity'],
-                'professionalDevelopmentRequestCostID' => $cost['professionalDevelopmentRequestCostID']
+                'professionalDevelopmentRequestCostID' => $cost['professionalDevelopmentRequestCostID'],
+                'primaryInput' => $cost['cost'],
             ]);
          }
 
@@ -340,7 +342,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             $participantBlocks->addBlock($person['professionalDevelopmentRequestPersonID'], [
             'gibbonPersonID' => $person['gibbonPersonID'],
             'role' => $person['role'] ?? '',
-            'professionalDevelopmentRequestPersonID' => $person['professionalDevelopmentRequestPersonID']
+            'professionalDevelopmentRequestPersonID' => $person['professionalDevelopmentRequestPersonID'],
+            'primaryInput' => Format::name('', $person['preferredName'], $person['surname'], 'Staff', false, true),
             ]);
         }
     } else if (!$edit && $highestAddAction == 'New Application_my') {
