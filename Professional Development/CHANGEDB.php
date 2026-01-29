@@ -128,5 +128,11 @@ $count++;
 $sql[$count][0] = "0.1.03";
 $sql[$count][1] = "
 ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `keyFocus` `keyFocus` VARCHAR(255) NOT NULL;end
-ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `keyFocus` `keyFocus` VARCHAR(255) NOT NULL;end
+";
+
+// v0.1.04
+$count++;
+$sql[$count][0] = "0.1.04";
+$sql[$count][1] = "
+ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `title` `title` VARCHAR(255) NOT NULL;end
 ";
