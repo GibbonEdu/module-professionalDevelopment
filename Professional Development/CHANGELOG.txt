@@ -19,6 +19,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 CHANGELOG
 =========
 
+v0.1.04
+-------
+Increased the character limit for title field in PD Portfolio
+
 v0.1.03
 -------
 Increased the character limit for field key focus
