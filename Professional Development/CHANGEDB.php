@@ -136,3 +136,11 @@ $sql[$count][0] = "0.1.04";
 $sql[$count][1] = "
 ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `title` `title` VARCHAR(255) NOT NULL;end
 ";
+
+// v0.1.05
+$count++;
+$sql[$count][0] = "0.1.05";
+$sql[$count][1] = "
+ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `title` `title` VARCHAR(255) NOT NULL;end
+ALTER TABLE `professionalDevelopmentPortfolio` ADD `gibbonPersonIDCreated` INT(10) UNSIGNED ZEROFILL NULL;end
+";

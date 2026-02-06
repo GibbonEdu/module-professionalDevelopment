@@ -125,14 +125,19 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         ->addParam('professionalDevelopmentPortfolioID')
         ->addParam('gibbonSchoolYearID', $gibbonSchoolYearID)
         ->format(function ($record, $actions) use ($gibbonPersonID, $highestAction) {
+            $actions->addAction('view', __('View'))
+                ->setURL('/modules/Professional Development/pd_portfolio_editRecord.php');
+
             if ($highestAction == 'Manage Portfolio_full' || $gibbonPersonID == $record['gibbonPersonID']) {
                 $actions->addAction('edit', __('Edit'))
                     ->addParam('mode', 'edit')
                     ->setURL('/modules/Professional Development/pd_portfolio_editRecord.php');
-            }
 
-            $actions->addAction('view', __('View Details'))
-            ->setURL('/modules/Professional Development/pd_portfolio_editRecord.php');
+                if ($record['gibbonPersonID'] == $record['gibbonPersonIDCreated']) {
+                    $actions->addAction('delete', __('Delete'))
+                        ->setURL('/modules/Professional Development/pd_portfolio_deleteRecord.php');
+                }
+            }
     });
 
     echo $table->render($portfolio);

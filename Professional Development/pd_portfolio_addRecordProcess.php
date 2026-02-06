@@ -57,6 +57,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         'completionDate'                    => $_POST['completionDate'],
         'timeSpent'                         => $_POST['timeSpent'],
         'keyTakeaways'                      => $_POST['keyTakeaways'],
+        'gibbonPersonIDCreated'             => $session->get('gibbonPersonID') ?? '',
     ];
 
     foreach ($portfolioData as $data) {
