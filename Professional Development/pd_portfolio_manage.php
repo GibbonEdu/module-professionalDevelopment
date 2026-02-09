@@ -44,6 +44,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     $gibbonPersonID = $session->get('gibbonPersonID');
     $search = $_POST['search'] ?? '';
+    $gibbonPersonIDSelected = ($highestAction == 'Manage Portfolio_full' && isset($_POST['gibbonPersonID'])) ? $_POST['gibbonPersonID'] : null;
 
     // SEARCH
     $form = Form::create('search', $session->get('absoluteURL').'/index.php?q='.$_GET['q']);
@@ -54,6 +55,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $row = $form->addRow();
         $row->addLabel('search', 'Search For')->description(__('Title, staff name, type, role, key focus'));
         $row->addTextField('search')->setValue($search);
+
+    if ($highestAction == 'Manage Portfolio_full') {
+        $row = $form->addRow();
+            $row->addLabel('gibbonPersonID', __('Staff'));
+            $row->addSelectStaff('gibbonPersonID')->selected($gibbonPersonIDSelected)->placeholder();
+    }
 
     $row = $form->addRow();
         $row->addSearchSubmit($session, __('Clear Filters'));
@@ -67,7 +74,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         ->sortBy('completionDate', 'DESC')
         ->fromPOST();
 
-    $gibbonPersonIDFilter = $highestAction == 'Manage Portfolio_full' ? null : $gibbonPersonID;
+    if ($highestAction == 'Manage Portfolio_full') {
+        $gibbonPersonIDFilter = $gibbonPersonIDSelected;
+    } else {
+        $gibbonPersonIDFilter = $gibbonPersonID;
+    }
+    
     $portfolio = $portfolioGateway->queryPortfolio($criteria, $gibbonSchoolYearID, $gibbonPersonIDFilter);
 
     // Portfolio Records Data Table
@@ -133,7 +145,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
                     ->addParam('mode', 'edit')
                     ->setURL('/modules/Professional Development/pd_portfolio_editRecord.php');
 
-                if ($record['gibbonPersonID'] == $record['gibbonPersonIDCreated']) {
+                if ($gibbonPersonID == $record['gibbonPersonIDCreated']) {
                     $actions->addAction('delete', __('Delete'))
                         ->setURL('/modules/Professional Development/pd_portfolio_deleteRecord.php');
                 }

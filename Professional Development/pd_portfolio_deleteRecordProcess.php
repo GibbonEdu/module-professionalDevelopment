@@ -19,7 +19,6 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Http\Url;
 use Gibbon\Data\Validator;
 use Gibbon\Module\ProfessionalDevelopment\Domain\PortfolioGateway;
 
@@ -41,14 +40,15 @@ if (isActionAccessible($guid, $connection2, '/modules/Professional Development/p
 } else {
     // Proceed!
     $portfolioGateway = $container->get(PortfolioGateway::class);
-    
-    if (!$portfolioGateway->exists($professionalDevelopmentPortfolioID)) {
+    $portfolioRecord = $portfolioGateway->getByID($professionalDevelopmentPortfolioID);
+
+    if (empty($portfolioRecord) || $portfolioRecord['gibbonPersonIDCreated'] != $session->get('gibbonPersonID')) {
         $URL .= '&return=error2';
         header("Location: {$URL}");
         exit;
+    } else {
+        $deleted = $portfolioGateway->delete($professionalDevelopmentPortfolioID);
     }
-
-    $deleted = $portfolioGateway->delete($professionalDevelopmentPortfolioID);
 
     $URL .= !$deleted
         ? '&return=error2'

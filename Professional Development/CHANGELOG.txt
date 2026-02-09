@@ -21,7 +21,7 @@ CHANGELOG
 
 v0.1.05
 -------
-Added the feature for a staff to delete a portfolio record entered manually via them.
+Added the feature for a staff to delete their own portfolio record.
 
 v0.1.04
 -------

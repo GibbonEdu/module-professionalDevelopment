@@ -50,13 +50,13 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $portfolioData = [
         'gibbonSchoolYearID'                => $session->get('gibbonSchoolYearID') ?? '',
         'gibbonPersonID'                    => $_POST['gibbonPersonID'] ?? $session->get('gibbonPersonID'),
-        'status'                            => $_POST['status'],
-        'role'                              => $_POST['role'],
-        'type'                              => $_POST['type'],
-        'title'                             => $_POST['title'],
-        'completionDate'                    => $_POST['completionDate'],
-        'timeSpent'                         => $_POST['timeSpent'],
-        'keyTakeaways'                      => $_POST['keyTakeaways'],
+        'status'                            => $_POST['status'] ?? '',
+        'role'                              => $_POST['role'] ?? '',
+        'type'                              => $_POST['type'] ?? '',
+        'title'                             => $_POST['title'] ?? '',
+        'completionDate'                    => $_POST['completionDate'] ?? '',
+        'timeSpent'                         => $_POST['timeSpent'] ?? '',
+        'keyTakeaways'                      => $_POST['keyTakeaways'] ?? '',
         'gibbonPersonIDCreated'             => $session->get('gibbonPersonID') ?? '',
     ];
 
