@@ -9,6 +9,10 @@ access:
     action: Manage Portfolio_full
 primaryKey:
     professionalDevelopmentPortfolioID
+uniqueKeys:
+    - gibbonPersonID
+    - completionDate
+    - title
 table:
     gibbonSchoolYearID: 
         name: "School Year"
@@ -56,3 +60,8 @@ table:
         name: "Key Takeaways"
         desc: "Key Takeaways from the PD event"
         args: { filter: string, required: false }
+    gibbonPersonIDCreated:
+        name: "Imported By"
+        desc: "Username or Email (if unique)"
+        args: { filter: nospaces, required: false }
+        relationship: { table: gibbonPerson, key: gibbonPersonID, field: username|email }
