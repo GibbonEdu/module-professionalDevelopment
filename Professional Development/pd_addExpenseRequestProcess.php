@@ -27,6 +27,7 @@ use Gibbon\Domain\System\SettingGateway;
 use Gibbon\Domain\System\NotificationGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestCostGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestPersonGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 include '../../gibbon.php';
 
@@ -62,14 +63,19 @@ if ($gibbonFinanceBudgetCycleID == '' or $gibbonFinanceBudgetID == '') { echo 'F
             $status = 'Paid';
             
             // Upload the receipt or ss of payment
+            $fileMetaData = null;
             $fileUploader = new Gibbon\FileUploader($pdo, $session);
             $file = (isset($_FILES['file']))? $_FILES['file'] : null;
+
             // Upload the file, return the /uploads relative path
             $attachment = $fileUploader->uploadFromPost($file, $title);
+
             if (!empty($file) && empty($attachment)) {
                 $URL .= '&return=error5';
                 header("Location: {$URL}");
                 exit();
+            } elseif (!empty($attachment)) {
+                $fileMetaData = $fileUploader->getFileMetaData($attachment);
             }
 
             // Get Reimbursement data if paid by "Self"
@@ -114,6 +120,15 @@ if ($gibbonFinanceBudgetCycleID == '' or $gibbonFinanceBudgetID == '') { echo 'F
             }
 
             $gibbonFinanceExpenseID = str_pad($connection2->lastInsertID(), 14, '0', STR_PAD_LEFT);
+
+            // Record file tracking
+            if (!empty($fileMetaData) && !empty($gibbonFinanceExpenseID)) {
+                $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'gibbonFinanceExpense', $gibbonFinanceExpenseID, 'paymentReimbursementReceipt');
+                
+                if (empty($gibbonFileID)) {
+                    $partialFail = true;
+                }
+            }
 
             $requestPersonGateway = $container->get(RequestPersonGateway::class);
             if (!empty($professionalDevelopmentRequestID)) {

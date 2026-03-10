@@ -19,7 +19,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-use Gibbon\Data\Validator;
 use Gibbon\Services\Format;
 use Gibbon\Comms\NotificationEvent;
 use Gibbon\Comms\NotificationSender;
@@ -31,6 +30,7 @@ use Gibbon\Module\ProfessionalDevelopment\Domain\RequestCostGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestDaysGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestPersonGateway;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestApproversGateway;
+use Gibbon\Contracts\Filesystem\FileHandler;
 
 require_once '../../gibbon.php';
 require_once  './moduleFunctions.php';
@@ -112,6 +112,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     }
 
     // Move attached file, if there is one
+    $fileMetaData = null;
     if (!empty($_FILES['supportingEvidenceFile']['tmp_name'])) {
         $fileUploader = new Gibbon\FileUploader($pdo, $session);
 
@@ -122,6 +123,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
         if (empty($requestData['supportingEvidence'])) {
             $partialFail = true;
+        } else {
+            $fileMetaData = $fileUploader->getFileMetaData($requestData['supportingEvidence']);
         }
     } elseif (empty($_POST['supportingEvidence'])) {
         $requestData['supportingEvidence'] = '';
@@ -148,6 +151,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         if (!$requestsGateway->update($professionalDevelopmentRequestID, $requestData)) {
             $professionalDevelopmentRequestID = null;
         }
+
+        // Handle file deletion when user removes logo
+        if (empty($requestData['supportingEvidence']) && !empty($pdRequest['supportingEvidence'])) {
+            $deleted = $container->get(FileHandler::class)->deleteFile('professionalDevelopmentRequest', $professionalDevelopmentRequestID, 'supportingEvidence');
+        }
     } else {
         $professionalDevelopmentRequestID = $requestsGateway->insert($requestData);
     }
@@ -158,6 +166,15 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
         $URL .= '&return=error2';
         header("Location: {$URL}");
         exit;
+    }
+
+    // Record file tracking (only if file uploaded)
+    if (!empty($fileMetaData) && !empty($professionalDevelopmentRequestID)) {
+        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'professionalDevelopmentRequest', $professionalDevelopmentRequestID, 'supportingEvidence');
+        
+        if (empty($gibbonFileID)) {
+            $partialFail = true;
+        }
     }
 
     // Add or edit Request Days
