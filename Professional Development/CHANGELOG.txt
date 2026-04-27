@@ -19,7 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 CHANGELOG
 =========
 
-v0.1.06
+v0.2.00
 -------
 Added comprehensive file upload tracking system to monitor and manage all file uploads across the system
 

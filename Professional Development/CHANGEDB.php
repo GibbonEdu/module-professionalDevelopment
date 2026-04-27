@@ -145,7 +145,7 @@ ALTER TABLE `professionalDevelopmentPortfolio` CHANGE `title` `title` VARCHAR(25
 ALTER TABLE `professionalDevelopmentPortfolio` ADD `gibbonPersonIDCreated` INT(10) UNSIGNED ZEROFILL NULL;end
 ";
 
-// v0.1.06
+// v0.2.00
 $count++;
-$sql[$count][0] = "0.1.06";
+$sql[$count][0] = "0.2.00";
 $sql[$count][1] = "";
