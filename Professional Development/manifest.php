@@ -27,7 +27,7 @@ $description = 'A Professional Development (PD) module for Gibbon to record Staf
 $entryURL    = "pd_manage.php";   // The landing page for the unit, used in the main menu
 $type        = "Additional";
 $category    = 'Other';
-$version     = '0.2.00';
+$version     = '0.2.01';
 $author      = 'Gibbon Foundation';
 $url         = 'https://github.com/GibbonEdu/module-professionalDevelopment';
 

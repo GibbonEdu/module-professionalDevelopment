@@ -154,7 +154,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
         // Handle file deletion when user removes logo
         if (empty($requestData['supportingEvidence']) && !empty($pdRequest['supportingEvidence'])) {
-            $deleted = $container->get(FileHandler::class)->deleteFile('professionalDevelopmentRequest', $professionalDevelopmentRequestID, 'supportingEvidence');
+            $deleted = $container->get(FileHandler::class)->deleteFile('professionalDevelopmentRequests', $professionalDevelopmentRequestID, 'supportingEvidence');
         }
     } else {
         $professionalDevelopmentRequestID = $requestsGateway->insert($requestData);
@@ -170,7 +170,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     // Record file tracking (only if file uploaded)
     if (!empty($fileMetaData) && !empty($professionalDevelopmentRequestID)) {
-        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'professionalDevelopmentRequest', $professionalDevelopmentRequestID, 'supportingEvidence');
+        $gibbonFileID = $container->get(FileHandler::class)->recordFileUpload($fileMetaData, 'professionalDevelopmentRequests', $professionalDevelopmentRequestID, 'supportingEvidence');
         
         if (empty($gibbonFileID)) {
             $partialFail = true;
