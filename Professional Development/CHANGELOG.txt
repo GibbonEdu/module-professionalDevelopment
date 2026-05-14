@@ -19,6 +19,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 CHANGELOG
 =========
 
+v0.1.06
+-------
+Fixed a small issue to avoid sorting data via Expenses Column
+
 v0.1.05
 -------
 Added the feature for a staff to delete their own portfolio record.

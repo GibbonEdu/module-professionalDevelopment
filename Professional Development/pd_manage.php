@@ -180,8 +180,8 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     });
 
     $table->addColumn('expenseSubmission', __('Expenses'))
+        ->notSortable()
         ->format(function ($request) {
-            
             if ($request['status'] == 'Approved') {
                 $status = '';
                 $tag= '';
