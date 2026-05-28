@@ -605,6 +605,28 @@ function getSettings(ContainerInterface $container, $guid)
             return $data ?? '';
         });
 
+    $settingFactory->addSetting('resourceCategories')
+        ->setRenderer(function ($data, $row) {
+            $row->addTextArea($data['name'])
+                ->setRows(2)
+                ->required()
+                ->setValue($data['value'] ?? '');
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
+        });
+
+    $settingFactory->addSetting('resourcePurposes')
+        ->setRenderer(function ($data, $row) {
+            $row->addTextArea($data['name'])
+                ->setRows(2)
+                ->required()
+                ->setValue($data['value'] ?? '');
+        })
+        ->setProcessor(function ($data) {
+            return $data ?? '';
+        });
+
     return $settingFactory->getSettings();
 }
 

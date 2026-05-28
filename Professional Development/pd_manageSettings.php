@@ -27,7 +27,7 @@ require_once __DIR__ . '/moduleFunctions.php';
 $page->breadcrumbs->add(__('Manage Settings'));
 
 if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manageSettings.php')) {
-    //Acess denied
+    // Access denied
     $page->addError(__('You do not have access to this action.'));
 } else {
 

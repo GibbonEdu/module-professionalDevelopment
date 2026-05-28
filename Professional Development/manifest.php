@@ -27,7 +27,7 @@ $description = 'A Professional Development (PD) module for Gibbon to record Staf
 $entryURL    = "pd_manage.php";   // The landing page for the unit, used in the main menu
 $type        = "Additional";
 $category    = 'Other';
-$version     = '0.1.06';
+$version     = '0.1.07';
 $author      = 'Gibbon Foundation';
 $url         = 'https://github.com/GibbonEdu/module-professionalDevelopment';
 
@@ -102,6 +102,10 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentPortfolio` (`professiona
 
 $moduleTables[] = "CREATE TABLE `professionalDevelopmentPortfolioTag` (`professionalDevelopmentPortfolioTagID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT, `tag` varchar(60) NOT NULL, PRIMARY KEY (`professionalDevelopmentPortfolioTagID`), UNIQUE KEY `tag` (`tag`)) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;";
 
+$moduleTables[] = "CREATE TABLE `professionalDevelopmentResource` (`professionalDevelopmentResourceID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT, `name` varchar(255) NOT NULL, `description` text NOT NULL, `category` varchar(255) NOT NULL, `purpose` varchar(255) NOT NULL, `tags` text NOT NULL, `content` text NOT NULL, `gibbonPersonIDCreated` int(10) unsigned zerofill NOT NULL, `gibbonPersonIDModified` int(10) unsigned zerofill NOT NULL, `timestampCreated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, `timestampModified` timestamp NULL DEFAULT NULL, PRIMARY KEY (`professionalDevelopmentResourceID`)) ENGINE = InnoDB CHARSET=utf8;";
+
+$moduleTables[] = "CREATE TABLE `professionalDevelopmentResourceTag` (`professionalDevelopmentResourceTagID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT, `tag` varchar(100) NOT NULL, PRIMARY KEY (`professionalDevelopmentResourceTagID`), UNIQUE KEY `tag` (`tag`)) ENGINE=InnoDB CHARSET=utf8;";
+
 // Add gibbonSettings entries
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'requestApprovalType', 'Request Approval Type', 'The type of approval that a request has to go through.', 'One Of')";
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'headApproval', 'Head Approval', 'A Final Approval is required before the request becomes approved.', '1')";
@@ -114,6 +118,9 @@ $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `na
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'participantsBlurb', 'Participant Instructions', 'Additional text and information to display in this section of the application', '')";
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'expensesBlurb', 'Expenses Instructions', 'Additional text and information to display in this section of the application', '')";
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'participantRoles', 'Participant Roles', 'A comma separated list of available options.', 'Attendee,Presenter,Organiser,Other')";
+$gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'resourceCategories', 'Resource Categories', 'Allowable choices for category when creating a resource.', 'Article,Book,Document,Website')";
+$gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'resourcePurposes', 'Resource Purposes', 'Allowable choices for purpose when creating a resource.', 'Skill,Teaching and Learning,Assessment Aid,Strategy')";
+
 
 // Add Notification Events
 $gibbonSetting[] = "INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `type`, `scopes`, `active`)
@@ -268,5 +275,59 @@ $actionRows[] = [
   'categoryPermissionStaff'   => 'Y',
   'categoryPermissionStudent' => 'N',
   'categoryPermissionParent'  => 'N', 
-  'categoryPermissionOther'   => 'N', 
+  'categoryPermissionOther'   => 'N',
+];
+
+  $actionRows[] = [
+  'name'                      => "Manage Resources_all",
+  'precedence'                => '1',
+  'category'                  => 'Resources',
+  'description'               => 'Manage, create and edit all resources.',
+  'URLList'                   => 'pd_resources_manage.php, pd_resources_add.php, pd_resources_edit.php, pd_resources_delete.php',
+  'entryURL'                  => 'pd_resources_manage.php', 
+  'defaultPermissionAdmin'    => 'Y', 
+  'defaultPermissionTeacher'  => 'N', 
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'N',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N', 
+  'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+  'name'                      => 'Manage Resources_my', 
+  'precedence'                => '0',
+  'category'                  => 'Resources', 
+  'description'               => 'Allows users to create ands edit their own resources.',
+  'URLList'                   => 'pd_resources_manage.php, pd_resources_add.php, pd_resources_edit.php, pd_resources_delete.php',
+  'entryURL'                  => 'pd_resources_manage.php',
+  'defaultPermissionAdmin'    => 'Y',
+  'defaultPermissionTeacher'  => 'Y',
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'Y',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N',
+  'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+  'name'                      => 'View Resources',
+  'precedence'                => '0',
+  'category'                  => 'Resources',
+  'description'               => 'View and filter all staff resources.',
+  'URLList'                   => 'pd_resources_view.php',
+  'entryURL'                  => 'pd_resources_view.php',
+  'defaultPermissionAdmin'    => 'Y',
+  'defaultPermissionTeacher'  => 'Y',
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'Y',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N',
+  'categoryPermissionOther'   => 'N',
 ];

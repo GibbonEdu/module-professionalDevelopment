@@ -30,7 +30,7 @@ $_POST = $container->get(Validator::class)->sanitize($_POST, ['agreementDescript
 $URL = $session->get('absoluteURL') . '/index.php?q=/modules/' . $session->get('module');
 
 if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/pd_manageSettings.php')) {
-    //Acess denied
+    // Access denied
     $URL .= '/pd_manage.php&return=error0';
     header("Location: {$URL}");
     exit();
