@@ -18,6 +18,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 CHANGELOG
 =========
+v0.1.08
+-------
+Updated the manifest.php file to include latest DB changes
 
 v0.1.07
 -------

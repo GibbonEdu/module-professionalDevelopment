@@ -27,7 +27,7 @@ $description = 'A Professional Development (PD) module for Gibbon to record Staf
 $entryURL    = "pd_manage.php";   // The landing page for the unit, used in the main menu
 $type        = "Additional";
 $category    = 'Other';
-$version     = '0.1.07';
+$version     = '0.1.08';
 $author      = 'Gibbon Foundation';
 $url         = 'https://github.com/GibbonEdu/module-professionalDevelopment';
 
@@ -42,7 +42,7 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequests` (
     `eventFocus` VARCHAR(60) NOT NULL,
     `attendeeRole` VARCHAR(60) NOT NULL,
     `attendeeCount` INT(10) NOT NULL,
-    `coverAmount` TEXT NOT NULL,
+    `expenseRequest` VARCHAR(60) NOT NULL,
     `eventTitle` VARCHAR(60) NOT NULL,
     `eventDescription` TEXT NOT NULL,
     `eventLocation` TEXT NOT NULL,
@@ -77,6 +77,7 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestPerson` (
   `professionalDevelopmentRequestID` INT(10) UNSIGNED ZEROFILL NOT NULL,
   `gibbonPersonID` INT(10) UNSIGNED ZEROFILL NOT NULL,
   `role` VARCHAR(60) NOT NULL,
+  `gibbonFinanceExpenseID` INT(14) UNSIGNED ZEROFILL NULL,
   PRIMARY KEY (`professionalDevelopmentRequestPersonID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
@@ -98,7 +99,7 @@ $moduleTables[] = "CREATE TABLE `professionalDevelopmentRequestApprovers` (
   PRIMARY KEY (`professionalDevelopmentRequestApproversID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
-$moduleTables[] = "CREATE TABLE `professionalDevelopmentPortfolio` (`professionalDevelopmentPortfolioID` INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT, `professionalDevelopmentRequestID` INT(10) UNSIGNED ZEROFILL DEFAULT NULL,`gibbonSchoolYearID` VARCHAR(3) NOT NULL, `gibbonPersonID` INT(10) NOT NULL, `status` VARCHAR(60) NOT NULL, `role` VARCHAR(60) NOT NULL, `type` VARCHAR(60) NOT NULL, `title` VARCHAR(60) NOT NULL, `completionDate` DATE NOT NULL, `timeSpent` DECIMAL(3,2) NOT NULL, `keyFocus` VARCHAR(100) NOT NULL, `resourcesLinks` VARCHAR(100) DEFAULT NULL, `keyTakeaways` VARCHAR(100) NOT NULL, `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (`professionalDevelopmentPortfolioID`)) ENGINE = InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;";
+$moduleTables[] = "CREATE TABLE `professionalDevelopmentPortfolio` (`professionalDevelopmentPortfolioID` INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT, `professionalDevelopmentRequestID` INT(10) UNSIGNED ZEROFILL DEFAULT NULL,`gibbonSchoolYearID` VARCHAR(3) NOT NULL, `gibbonPersonID` INT(10) UNSIGNED ZEROFILL NOT NULL, `gibbonPersonIDCreated` INT(10) UNSIGNED ZEROFILL NULL, `status` VARCHAR(60) NOT NULL, `role` VARCHAR(60) NOT NULL, `type` VARCHAR(60) NOT NULL, `title` VARCHAR(255) NOT NULL, `completionDate` DATE NOT NULL, `timeSpent` DECIMAL(7,5) NOT NULL, `keyFocus` VARCHAR(255) NOT NULL, `resourcesLinks` VARCHAR(255) DEFAULT NULL, `keyTakeaways` TEXT NOT NULL, `timestampCreated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (`professionalDevelopmentPortfolioID`)) ENGINE = InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;";
 
 $moduleTables[] = "CREATE TABLE `professionalDevelopmentPortfolioTag` (`professionalDevelopmentPortfolioTagID` int(10) unsigned zerofill NOT NULL AUTO_INCREMENT, `tag` varchar(60) NOT NULL, PRIMARY KEY (`professionalDevelopmentPortfolioTagID`), UNIQUE KEY `tag` (`tag`)) ENGINE=InnoDB CHARSET=utf8 COLLATE=utf8_general_ci;";
 
@@ -118,6 +119,7 @@ $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `na
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'participantsBlurb', 'Participant Instructions', 'Additional text and information to display in this section of the application', '')";
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'expensesBlurb', 'Expenses Instructions', 'Additional text and information to display in this section of the application', '')";
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'participantRoles', 'Participant Roles', 'A comma separated list of available options.', 'Attendee,Presenter,Organiser,Other')";
+$gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'pdTypes', 'PD Types', 'A comma separated list of available types for PD.', 'Conference,Training')";
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'resourceCategories', 'Resource Categories', 'Allowable choices for category when creating a resource.', 'Article,Book,Document,Website')";
 $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'resourcePurposes', 'Resource Purposes', 'Allowable choices for purpose when creating a resource.', 'Skill,Teaching and Learning,Assessment Aid,Strategy')";
 
@@ -126,7 +128,9 @@ $gibbonSetting[] = "INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `na
 $gibbonSetting[] = "INSERT INTO `gibbonNotificationEvent` (`event`, `moduleName`, `actionName`, `type`, `scopes`, `active`)
 VALUES
 ('Request Approval', 'Professional Development', 'Manage Applications_full', 'Additional', 'All', 'Y'),
-('New Request', 'Professional Development', 'Manage Applications_full', 'Additional', 'All', 'Y');";
+('New Request', 'Professional Development', 'Manage Applications_full', 'Additional', 'All', 'Y'),
+('Expense Request Notifications', 'Professional Development', 'New Application_my', 'Additional', 'All', 'Y'),
+('New Portfolio Record', 'Professional Development', 'New Portfolio Record_all', 'Additional', 'All', 'Y');";
 
 
 // Action rows 
@@ -275,6 +279,78 @@ $actionRows[] = [
   'categoryPermissionStaff'   => 'Y',
   'categoryPermissionStudent' => 'N',
   'categoryPermissionParent'  => 'N', 
+  'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+  'name'                      => 'New Portfolio Record_my',
+  'precedence'                => '0',
+  'category'                  => 'Portfolio',
+  'description'               => 'Allows users to add records to their portfolio.',
+  'URLList'                   => 'pd_portfolio_addRecord.php',
+  'entryURL'                  => 'pd_portfolio_addRecord.php',
+  'defaultPermissionAdmin'    => 'Y',
+  'defaultPermissionTeacher'  => 'Y',
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'Y',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N',
+  'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+  'name'                      => 'New Portfolio Record_all',
+  'precedence'                => '1',
+  'category'                  => 'Portfolio',
+  'description'               => 'Allows users to add records to their portfolio.',
+  'URLList'                   => 'pd_portfolio_addRecord.php',
+  'entryURL'                  => 'pd_portfolio_addRecord.php',
+  'defaultPermissionAdmin'    => 'Y',
+  'defaultPermissionTeacher'  => 'N',
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'N',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N',
+  'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+  'name'                      => 'Manage Portfolio_my',
+  'precedence'                => '0',
+  'category'                  => 'Portfolio',
+  'description'               => 'Allows users to manage their portfolio records.',
+  'URLList'                   => 'pd_portfolio_manage.php',
+  'entryURL'                  => 'pd_portfolio_manage.php',
+  'defaultPermissionAdmin'    => 'Y',
+  'defaultPermissionTeacher'  => 'Y',
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'Y',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N',
+  'categoryPermissionOther'   => 'N',
+];
+
+$actionRows[] = [
+  'name'                      => 'Manage Portfolio_full',
+  'precedence'                => '1',
+  'category'                  => 'Portfolio',
+  'description'               => 'Allows users to manage all portfolio records.',
+  'URLList'                   => 'pd_portfolio_manage.php',
+  'entryURL'                  => 'pd_portfolio_manage.php',
+  'defaultPermissionAdmin'    => 'Y',
+  'defaultPermissionTeacher'  => 'N',
+  'defaultPermissionStudent'  => 'N',
+  'defaultPermissionParent'   => 'N',
+  'defaultPermissionSupport'  => 'N',
+  'categoryPermissionStaff'   => 'Y',
+  'categoryPermissionStudent' => 'N',
+  'categoryPermissionParent'  => 'N',
   'categoryPermissionOther'   => 'N',
 ];
 

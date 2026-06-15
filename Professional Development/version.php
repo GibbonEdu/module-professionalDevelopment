@@ -19,5 +19,5 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-$moduleVersion = '0.1.07';
+$moduleVersion = '0.1.08';
 $coreVersion = '28.0.00';
