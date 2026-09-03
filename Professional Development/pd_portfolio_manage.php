@@ -47,10 +47,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     $gibbonPersonIDSelected = ($highestAction == 'Manage Portfolio_full' && isset($_POST['gibbonPersonID'])) ? $_POST['gibbonPersonID'] : null;
 
     // SEARCH
-    $form = Form::create('search', $session->get('absoluteURL').'/index.php?q='.$_GET['q']);
+    $form = Form::create('search', $session->get('absoluteURL').'/index.php?q='.$_GET['q'].'&gibbonSchoolYearID='.$gibbonSchoolYearID);
     $form->setFactory(DatabaseFormFactory::create($pdo));
     $form->setTitle(__('Search'));
     $form->setClass('noIntBorder fullWidth');
+
+    $form->addHiddenValue('gibbonSchoolYearID', $gibbonSchoolYearID);
 
     $row = $form->addRow();
         $row->addLabel('search', 'Search For')->description(__('Title, staff name, type, role, key focus'));
@@ -63,7 +65,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     }
 
     $row = $form->addRow();
-        $row->addSearchSubmit($session, __('Clear Filters'));
+        $row->addSearchSubmit($session, __('Clear Filters'), ['gibbonSchoolYearID']);
         
     echo $form->getOutput();
 

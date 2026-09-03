@@ -20,6 +20,10 @@ CHANGELOG
 =========
 v0.1.08
 -------
+Fixed the issue of search field not including school year parameter
+
+v0.1.08
+-------
 Updated the manifest.php file to include latest DB changes
 
 v0.1.07

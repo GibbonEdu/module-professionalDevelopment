@@ -81,10 +81,12 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     }
 
     // SEARCH
-    $form = Form::create('requestFilters', $session->get('absoluteURL') . '/index.php?q=' . $_GET['q']);
+    $form = Form::create('requestFilters', $session->get('absoluteURL') . '/index.php?q=' . $_GET['q'] . '&gibbonSchoolYearID=' . $gibbonSchoolYearID);
     $form->setFactory(DatabaseFormFactory::create($pdo));
     $form->setTitle(__('Search'));
     $form->setClass('noIntBorder fullWidth');
+
+    $form->addHiddenValue('gibbonSchoolYearID', $gibbonSchoolYearID);
 
     $row = $form->addRow();
         $row->addLabel('search', 'Search For')->description(__('Title, owner, type, focus'));
@@ -100,7 +102,7 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
     }
 
     $row = $form->addRow();
-        $row->addSearchSubmit($session, __('Clear Search'));
+        $row->addSearchSubmit($session, __('Clear Search'), ['gibbonSchoolYearID']);
         
     echo $form->getOutput();
 
