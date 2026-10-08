@@ -18,6 +18,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 CHANGELOG
 =========
+v0.1.11
+-------
+Added Professional Development Budget setting
+
 v0.1.10
 -------
 Added the 'Purchase By Status" in View Request Page
