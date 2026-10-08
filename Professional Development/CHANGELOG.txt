@@ -20,7 +20,7 @@ CHANGELOG
 =========
 v0.1.11
 -------
-Added Professional Development Budget setting
+Added Professional Development Budget setting (gibbonFinanceBudgetID)
 
 v0.1.10
 -------
