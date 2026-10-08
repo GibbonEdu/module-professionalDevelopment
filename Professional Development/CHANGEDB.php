@@ -182,3 +182,11 @@ $sql[$count][1] = "";
 $count++;
 $sql[$count][0] = "0.1.10";
 $sql[$count][1] = "";
+
+// v0.1.11
+$count++;
+$sql[$count][0] = "0.1.11";
+$sql[$count][1] = "
+INSERT INTO `gibbonSetting` (`gibbonSettingID`, `scope`, `name`, `nameDisplay`, `description`, `value`) VALUES (NULL, 'Professional Development', 'gibbonFinanceBudgetID', 'Professional Development Budget', 'The Finance budget used for Professional Development expense requests.', '');end
+UPDATE `gibbonSetting` SET `value`=COALESCE((SELECT gibbonFinanceBudgetID FROM gibbonFinanceBudget WHERE name='Professional Development' LIMIT 1), '') WHERE `scope`='Professional Development' AND `name`='gibbonFinanceBudgetID';end
+";

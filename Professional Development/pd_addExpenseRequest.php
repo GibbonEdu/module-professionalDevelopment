@@ -57,10 +57,11 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
 
     // Check if Professional Development Budget is specified 
     $requestCostGateway = $container->get(RequestCostGateway::class);
-    $gibbonFinanceBudgetID='';
-    $budgetResult = $requestCostGateway->getProfessionalDevelopmentBudget();
+    $settingGateway = $container->get(SettingGateway::class);
+    $gibbonFinanceBudgetID = $settingGateway->getSettingByScope('Professional Development', 'gibbonFinanceBudgetID');
+    $budgetResult = $requestCostGateway->getProfessionalDevelopmentBudget($gibbonFinanceBudgetID);
     if (empty($budgetResult)) {
-        $page->addError(__('Please create a budget for Professional Development.'));
+        $page->addError(__('Please select a Professional Development budget in Manage Settings.'));
     } else {
         $gibbonFinanceBudgetID = $budgetResult['gibbonFinanceBudgetID'];
     }
@@ -81,7 +82,6 @@ if (!isActionAccessible($guid, $connection2, '/modules/Professional Development/
             $page->addError(__('You do not have Full or Write access to the Professional Development budget.'));
         } else {
             // Get and check settings
-            $settingGateway = $container->get(SettingGateway::class);
             $expenseApprovalType = $settingGateway->getSettingByScope('Finance', 'expenseApprovalType');
             $budgetLevelExpenseApproval = $settingGateway->getSettingByScope('Finance', 'budgetLevelExpenseApproval');
             if ($expenseApprovalType == '' or $budgetLevelExpenseApproval == '') {
