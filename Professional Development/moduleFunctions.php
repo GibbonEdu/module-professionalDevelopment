@@ -394,11 +394,20 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
             'School' => __('To be settled by Finance Team'),
             'Self'   => __('To be reimbursed to Staff'),
         ];
+
         $table->addColumn('purchaseBy', __('Purchase By Status'))
-            ->format(function ($participant) use ($purchaseStatus) {
+            ->format(function ($participant) {
                 return empty($participant['gibbonFinanceExpenseID'])
                     ? __('Pending')
-                    : ($purchaseStatus[$participant['purchaseBy'] ?? ''] ?? __('Pending'));
+                    : __($participant['purchaseBy'] ?? 'Pending');
+            })
+            ->formatDetails(function ($participant) use ($purchaseStatus) {
+                if (empty($participant['gibbonFinanceExpenseID'])) {
+                    return;
+                }
+
+                $details = $purchaseStatus[$participant['purchaseBy'] ?? ''] ?? '';
+                return !empty($details) ? Format::small($details) : '';
             });
 
         if (!empty(array_filter(array_column($expenseParticipants, 'gibbonFinanceExpenseID')))) {
@@ -408,7 +417,9 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
                 ->format(function ($participant, $actions) {
                     if (!empty($participant['gibbonFinanceExpenseID'])) {
                         $actions->addAction('view', __('View'))
-                            ->setURL('/modules/Finance/expenses_manage_view.php');
+                            ->setURL('/modules/Finance/expenses_manage_view.php')
+                            ->setTarget('_blank');
+
                     }
                 });
         }
