@@ -18,7 +18,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 CHANGELOG
 =========
-v0.1.08
+v0.1.10
+-------
+Added the 'Purchase By Status" in View Request Page
+
+v0.1.09
 -------
 Fixed the issue of search field not including school year parameter
 

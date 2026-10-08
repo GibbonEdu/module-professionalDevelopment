@@ -23,9 +23,11 @@ class RequestPersonGateway extends QueryableGateway
         $query = $this->newQuery()
         ->from($this->getTableName())
         ->innerJoin('gibbonPerson', 'gibbonPerson.gibbonPersonID = professionalDevelopmentRequestPerson.gibbonPersonID')
+        ->leftJoin('gibbonFinanceExpense', 'gibbonFinanceExpense.gibbonFinanceExpenseID = professionalDevelopmentRequestPerson.gibbonFinanceExpenseID')
         ->cols([
             'gibbonPerson.gibbonPersonID', 'professionalDevelopmentRequestPerson.professionalDevelopmentRequestPersonID', 'professionalDevelopmentRequestPerson.role', 'professionalDevelopmentRequestPerson.gibbonFinanceExpenseID', 'gibbonPerson.title', 'gibbonPerson.preferredName', 'gibbonPerson.surname', 'gibbonPerson.image_240',
-            'professionalDevelopmentRequestPerson.professionalDevelopmentRequestID'
+            'professionalDevelopmentRequestPerson.professionalDevelopmentRequestID',
+            'gibbonFinanceExpense.purchaseBy', 'gibbonFinanceExpense.gibbonFinanceBudgetCycleID'
         ]);
 
         $criteria->addFilterRules([
