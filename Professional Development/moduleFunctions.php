@@ -373,24 +373,58 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
         $row = $form->addRow()->addClass('expenseRequestDetails');
             $table = DataTable::create('expenseRequestDetails');
     
+        $expenseParticipants = $participants->toArray();
+        if ($pdRequest['expenseRequest'] != 'Individual') {
+            $expenseParticipants = array_values(array_filter($expenseParticipants, function ($participant) use ($pdRequest) {
+                return $participant['gibbonPersonID'] == $pdRequest['gibbonPersonIDCreated'];
+            }));
+        }
+
         $table->addColumn('name', __('Participant'))
             ->format(Format::using('name', ['title', 'preferredName', 'surname', 'Staff', false, true]));
-    
-        $table->addColumn('expenseRequestStatus', __('Expense Request Submission Status'))
+
+        $table->addColumn('expenseRequestStatus', __('Purchase Request Submission Status'))
             ->format(function ($participant) {
-                return !empty($participant['gibbonFinanceExpenseID']) 
-                ? Format::tooltip(icon('solid', 'check', 'size-6 fill-current text-green-600'), __('Submitted'))
-                : Format::tooltip(icon('solid', 'cross', 'size-6 fill-current text-red-700'), __('Pending'));
+                return !empty($participant['gibbonFinanceExpenseID'])
+                    ? Format::tooltip(icon('solid', 'check', 'size-6 fill-current text-green-600'), __('Submitted'))
+                    : Format::tooltip(icon('solid', 'cross', 'size-6 fill-current text-red-700'), __('Pending'));
             });
 
-        if ($pdRequest['expenseRequest'] == "Individual") {
-            $row->addContent($table->render($participants));
-        } else {
-            $participant = array_filter($participants->toArray(), function($participant) use ($pdRequest) {
-                return $participant['gibbonPersonID'] == $pdRequest['gibbonPersonIDCreated'];
+        $purchaseStatus = [
+            'School' => __('To be settled by Finance Team'),
+            'Self'   => __('To be reimbursed to Staff'),
+        ];
+
+        $table->addColumn('purchaseBy', __('Purchase By Status'))
+            ->format(function ($participant) {
+                return empty($participant['gibbonFinanceExpenseID'])
+                    ? __('Pending')
+                    : __($participant['purchaseBy'] ?? 'Pending');
+            })
+            ->formatDetails(function ($participant) use ($purchaseStatus) {
+                if (empty($participant['gibbonFinanceExpenseID'])) {
+                    return;
+                }
+
+                $details = $purchaseStatus[$participant['purchaseBy'] ?? ''] ?? '';
+                return !empty($details) ? Format::small($details) : '';
             });
-            $row->addContent($table->render($participant));
+
+        if (!empty(array_filter(array_column($expenseParticipants, 'gibbonFinanceExpenseID')))) {
+            $table->addActionColumn()
+                ->addParam('gibbonFinanceExpenseID')
+                ->addParam('gibbonFinanceBudgetCycleID')
+                ->format(function ($participant, $actions) {
+                    if (!empty($participant['gibbonFinanceExpenseID'])) {
+                        $actions->addAction('view', __('View'))
+                            ->setURL('/modules/Finance/expenses_manage_view.php')
+                            ->setTarget('_blank');
+
+                    }
+                });
         }
+
+        $row->addContent($table->render($expenseParticipants));
     }
 
     if ($showLogs) {

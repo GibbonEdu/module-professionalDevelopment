@@ -177,3 +177,8 @@ $sql[$count][1] = "";
 $count++;
 $sql[$count][0] = "0.1.09";
 $sql[$count][1] = "";
+
+// v0.1.10
+$count++;
+$sql[$count][0] = "0.1.10";
+$sql[$count][1] = "";
