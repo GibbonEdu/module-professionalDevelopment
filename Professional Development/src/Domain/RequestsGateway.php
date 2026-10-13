@@ -120,6 +120,28 @@ class RequestsGateway extends QueryableGateway
 
         return $this->runSelect($query);
     }
+
+    /**
+     * Eligible PD requests for a Finance budget cycle: school year dates overlap the cycle dates.
+     */
+    public function selectEligibleExpenseRequests($gibbonFinanceBudgetCycleID)
+    {
+        $query = $this
+            ->newSelect()
+            ->cols([
+                'professionalDevelopmentRequests.professionalDevelopmentRequestID as value',
+                'professionalDevelopmentRequests.eventTitle as name',
+            ])
+            ->from($this->getTableName())
+            ->innerJoin('gibbonSchoolYear', 'gibbonSchoolYear.gibbonSchoolYearID = professionalDevelopmentRequests.gibbonSchoolYearID')
+            ->innerJoin('gibbonFinanceBudgetCycle', 'gibbonFinanceBudgetCycle.dateStart <= gibbonSchoolYear.lastDay AND gibbonFinanceBudgetCycle.dateEnd >= gibbonSchoolYear.firstDay')
+            ->where('gibbonFinanceBudgetCycle.gibbonFinanceBudgetCycleID = :gibbonFinanceBudgetCycleID')
+            ->where("professionalDevelopmentRequests.status NOT IN ('Draft', 'Cancelled', 'Rejected')")
+            ->bindValue('gibbonFinanceBudgetCycleID', $gibbonFinanceBudgetCycleID)
+            ->orderBy(['professionalDevelopmentRequests.eventTitle']);
+
+        return $this->runSelect($query);
+    }
     
     public function beginTransaction() {
         $this->db()->beginTransaction();

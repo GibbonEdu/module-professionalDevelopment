@@ -46,9 +46,13 @@ class RequestCostGateway extends QueryableGateway
         return $this->db()->delete($sql, $data);
     }
 
-    public function getProfessionalDevelopmentBudget() {
-        $data = ['name' => 'Professional Development'];
-        $sql = "SELECT * FROM gibbonFinanceBudget WHERE gibbonFinanceBudget.name=:name";
+    public function getProfessionalDevelopmentBudget($gibbonFinanceBudgetID) {
+        if (empty($gibbonFinanceBudgetID)) {
+            return [];
+        }
+
+        $data = ['gibbonFinanceBudgetID' => $gibbonFinanceBudgetID];
+        $sql = "SELECT * FROM gibbonFinanceBudget WHERE gibbonFinanceBudgetID=:gibbonFinanceBudgetID";
 
         return $this->db()->selectOne($sql, $data);
     }

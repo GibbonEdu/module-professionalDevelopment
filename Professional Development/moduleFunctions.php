@@ -26,6 +26,7 @@ use Gibbon\Tables\View\GridView;
 use Gibbon\Domain\User\UserGateway;
 use Psr\Container\ContainerInterface;
 use Gibbon\Domain\System\SettingGateway;
+use Gibbon\Domain\Finance\FinanceGateway;
 use Gibbon\Domain\Departments\DepartmentGateway;
 use Gibbon\Module\ProfessionalDevelopment\Data\SettingFactory;
 use Gibbon\Module\ProfessionalDevelopment\Domain\RequestsGateway;
@@ -508,10 +509,25 @@ function renderRequest(ContainerInterface $container, $professionalDevelopmentRe
 function getSettings(ContainerInterface $container, $guid)
 {
     $requestsGateway = $container->get(RequestsGateway::class);
+    $financeGateway = $container->get(FinanceGateway::class);
 
     $requestApprovalOptions = ['One Of', 'Two Of', 'Chain Of All'];
+    $budgets = $financeGateway->selectBy(['active' => 'Y'], ['gibbonFinanceBudgetID', 'name'])->fetchKeyPair();
+    asort($budgets, SORT_NATURAL | SORT_FLAG_CASE);
 
     $settingFactory = new SettingFactory();
+
+    $settingFactory->addSetting('gibbonFinanceBudgetID')
+        ->setRenderer(function ($data, $row) use ($budgets) {
+            $row->addSelect($data['name'])
+                ->fromArray($budgets)
+                ->placeholder()
+                ->selected($data['value'] ?? '')
+                ->required();
+        })
+        ->setProcessor(function ($data) use ($budgets) {
+            return isset($budgets[$data]) ? $data : false;
+        });
 
     $settingFactory->addSetting('requestApprovalType')
         ->setRenderer(function ($data, $row) use ($requestApprovalOptions) {
